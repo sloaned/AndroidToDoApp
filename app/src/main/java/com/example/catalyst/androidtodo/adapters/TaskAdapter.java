@@ -13,12 +13,14 @@ import android.widget.Toast;
 import com.example.catalyst.androidtodo.R;
 import com.example.catalyst.androidtodo.models.Task;
 
+import java.util.ArrayList;
+
 public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder> {
 
     private Context mContext;
-    private Task[] mTasks;
+    private ArrayList<Task> mTasks = new ArrayList<Task>();
 
-    public TaskAdapter(Context context, Task[] tasks) {
+    public TaskAdapter(Context context, ArrayList<Task> tasks) {
         mContext = context;
         mTasks = tasks;
     }
@@ -34,12 +36,12 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder
 
     @Override
     public void onBindViewHolder(TaskViewHolder holder, int position) {
-        holder.bindTask(mTasks[position]);
+        holder.bindTask(mTasks.get(position));
     }
 
     @Override
     public int getItemCount() {
-        return mTasks.length;
+        return mTasks.size();
     }
 
     public class TaskViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {

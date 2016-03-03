@@ -1,8 +1,8 @@
 <resources>
     <string name="app_name">AndroidToDo</string>
-    <string name="title_activity_login">Sign in</string>
     <string name="error_title">Oops! Sorry!</string>
     <string name="error_message">There was an error. Please try again.</string>
     <string name="error_button_ok">OK</string>
+    <string name="title_activity_login">LoginActivity</string>
 
 </resources>

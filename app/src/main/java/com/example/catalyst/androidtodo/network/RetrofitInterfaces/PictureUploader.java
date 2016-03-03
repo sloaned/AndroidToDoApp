@@ -8,6 +8,6 @@ import retrofit2.http.POST;
 
 public interface PictureUploader {
 
-    @POST("/androidUpload")
+    @POST("androidUpload")
     Call<ImageUpload> uploadImage(@Body ImageUpload imageUpload);
 }

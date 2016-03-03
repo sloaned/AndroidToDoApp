@@ -8,6 +8,6 @@ import retrofit2.http.Path;
 
 public interface ITask {
 
-    @GET("/task/{id}")
+    @GET("task/{id}")
     Call<Task> getTask(@Path("id") int id);
 }

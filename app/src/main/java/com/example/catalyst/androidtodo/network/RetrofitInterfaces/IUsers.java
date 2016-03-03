@@ -10,12 +10,12 @@ import retrofit2.http.Path;
 
 public interface IUsers {
 
-    @GET("/user/{id}")
+    @GET("user/{id}")
     Call<User> getUser(@Path("id") int id);
 
-    @POST("/login.json")
+    @POST("login.json")
     Call<User> login(@Body User user);
 
-    @POST("/user")
+    @POST("user")
     Call<User> postUser(@Body User user);
 }

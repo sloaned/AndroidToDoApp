@@ -22,6 +22,7 @@ import okhttp3.Interceptor;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
+import okhttp3.ResponseBody;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Retrofit;
@@ -32,7 +33,7 @@ public class ApiCaller {
 
     public static final String TAG = ApiCaller.class.getSimpleName();
 
-    private static final String BASE_URL = "http://pc30120.catalystsolves.com:8080";
+    private static final String BASE_URL = "http://pc30120.catalystsolves.com:8080/";
 
     private Gson gson = new GsonBuilder().setDateFormat("yyyy-MM-dd'T'HH:mm:ssZ").create();
     private OkHttpClient client = new OkHttpClient();
@@ -48,7 +49,7 @@ public class ApiCaller {
 
         prefs = PreferenceManager.getDefaultSharedPreferences(context);
 
-        assignInterceptor();
+        client = assignInterceptor();
         retrofit = new Retrofit.Builder()
                 .baseUrl(BASE_URL)
                 .addConverterFactory(GsonConverterFactory.create(gson))
@@ -56,8 +57,8 @@ public class ApiCaller {
                 .build();
     }
 
-    private void assignInterceptor() {
-        client.newBuilder().addInterceptor(new Interceptor() {
+    private OkHttpClient assignInterceptor() {
+        return client.newBuilder().addInterceptor(new Interceptor() {
             @Override
             public okhttp3.Response intercept(Chain chain) throws IOException {
                 Request original = chain.request();
@@ -67,7 +68,7 @@ public class ApiCaller {
                         .build();
                 return chain.proceed(request);
             }
-        });
+        }).build();
     }
 
     public void makeTaskGetCall() {
@@ -93,23 +94,23 @@ public class ApiCaller {
 
         LoginUser loginRequest = new LoginUser();
         loginRequest.setUsername("random@gmail.com");
-        loginRequest.setPassword("Password1");
+        loginRequest.setPassword("Password3");
 
         loginUser = retrofit.create(ILoginUser.class);
-        Call<LoginUser> loginInfo = loginUser.login(new LoginUser());
+        Call<LoginUser> loginInfo = loginUser.login(loginRequest);
 
-        loginInfo.enqueue(new Callback<LoginUser>() {
+        loginInfo.enqueue(new Callback() {
             @Override
-            public void onResponse(Call<LoginUser> call, retrofit2.Response<LoginUser> response) {
+            public void onResponse(Call call, retrofit2.Response response) {
 
                 for (String head : response.headers().names()) {
-                    Log.d(TAG, "Info: " + head);
+                    Log.d(TAG, "Info: " + head + " " + response.headers().values(head));
                 }
             }
 
             @Override
-            public void onFailure(Call<LoginUser> call, Throwable t) {
-                Log.e(TAG, "Failure: " + t.getMessage());
+            public void onFailure(Call call, Throwable t) {
+                Log.e(TAG, "Dat Failure: " + t.getMessage());
             }
         });
     }
