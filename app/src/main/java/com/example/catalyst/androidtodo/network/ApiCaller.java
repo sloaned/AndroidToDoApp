@@ -94,14 +94,14 @@ public class ApiCaller {
 
         LoginUser loginRequest = new LoginUser();
         loginRequest.setUsername("random@gmail.com");
-        loginRequest.setPassword("Password3");
+        loginRequest.setPassword("Password1");
 
         loginUser = retrofit.create(ILoginUser.class);
-        Call<LoginUser> loginInfo = loginUser.login(loginRequest);
+        Call<ResponseBody> loginInfo = loginUser.login(loginRequest); //<LoginUser>
 
-        loginInfo.enqueue(new Callback() {
+        loginInfo.enqueue(new Callback<ResponseBody>() {
             @Override
-            public void onResponse(Call call, retrofit2.Response response) {
+            public void onResponse(Call<ResponseBody> call, retrofit2.Response<ResponseBody> response) {
 
                 for (String head : response.headers().names()) {
                     Log.d(TAG, "Info: " + head + " " + response.headers().values(head));
@@ -109,7 +109,7 @@ public class ApiCaller {
             }
 
             @Override
-            public void onFailure(Call call, Throwable t) {
+            public void onFailure(Call<ResponseBody> call, Throwable t) {
                 Log.e(TAG, "Dat Failure: " + t.getMessage());
             }
         });

@@ -2,6 +2,7 @@ package com.example.catalyst.androidtodo.network.RetrofitInterfaces;
 
 import com.example.catalyst.androidtodo.models.User;
 
+import okhttp3.ResponseBody;
 import retrofit2.Call;
 import retrofit2.http.Body;
 import retrofit2.http.GET;
@@ -17,5 +18,5 @@ public interface IUsers {
     Call<User> login(@Body User user);
 
     @POST("user")
-    Call<User> postUser(@Body User user);
+    Call<ResponseBody> postUser(@Body User user);
 }

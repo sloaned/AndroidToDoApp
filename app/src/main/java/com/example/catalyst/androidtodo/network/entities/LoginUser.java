@@ -1,8 +1,5 @@
 package com.example.catalyst.androidtodo.network.entities;
 
-/**
- * Created by dsloane on 3/2/2016.
- */
 public class LoginUser {
 
     private String username;
