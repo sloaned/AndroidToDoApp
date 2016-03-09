@@ -5,8 +5,28 @@
               android:layout_height="match_parent">
 
     <TextView
-        android:layout_width="match_parent"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:id="@+id/taskName"/>
+        android:id="@+id/taskName"
+        android:textSize="18sp"/>
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/taskDetails"
+        android:textSize="12sp"
+        android:layout_below="@+id/taskName"/>
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/taskDueDate"
+        android:textSize="14sp"
+        android:layout_alignParentRight="true"/>
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/taskLocation"
+        android:textSize="14sp"
+        android:layout_alignParentRight="true"
+        android:layout_below="@+id/taskDueDate"/>
 
 </RelativeLayout>

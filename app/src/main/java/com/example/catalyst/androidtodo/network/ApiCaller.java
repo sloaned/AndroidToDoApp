@@ -90,7 +90,7 @@ public class ApiCaller {
         }).build();
     }
 
-    private OkHttpClient assignInterceptorWithToken() {
+    public OkHttpClient assignInterceptorWithToken() {
 
         final String token = prefs.getString(SharedPreferencesConstants.PREFS_TOKEN, (String) null);
         Log.d(TAG, "before adding interceptor, token = " + token);

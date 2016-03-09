@@ -25,6 +25,6 @@ public interface ITask {
     Boolean editTask(Task task);
 
     @POST("task")
-    Boolean createTask(Task task);
+    Call<Task> createTask(Task task);
 
 }

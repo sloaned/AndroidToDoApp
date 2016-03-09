@@ -7,9 +7,11 @@ import android.accounts.AccountManagerFuture;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.os.Parcelable;
 import android.preference.PreferenceManager;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
+import android.support.v4.app.DialogFragment;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -18,24 +20,37 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.Button;
 
 import com.example.catalyst.androidtodo.R;
 import com.example.catalyst.androidtodo.adapters.TaskAdapter;
+import com.example.catalyst.androidtodo.fragments.AddTaskFragment;
 import com.example.catalyst.androidtodo.models.Task;
 import com.example.catalyst.androidtodo.network.ApiCaller;
 import com.example.catalyst.androidtodo.network.RetrofitInterfaces.ILoginUser;
+import com.example.catalyst.androidtodo.network.RetrofitInterfaces.ITask;
 import com.example.catalyst.androidtodo.network.entities.LoginUser;
+import com.example.catalyst.androidtodo.util.JSONConstants;
 import com.example.catalyst.androidtodo.util.SharedPreferencesConstants;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.IOException;
 import java.util.ArrayList;
 
 import butterknife.Bind;
 import butterknife.ButterKnife;
+import okhttp3.Interceptor;
 import okhttp3.OkHttpClient;
+import okhttp3.Request;
 import okhttp3.ResponseBody;
+import okhttp3.logging.HttpLoggingInterceptor;
 import retrofit2.Call;
+import retrofit2.Callback;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 import retrofit2.http.Body;
@@ -50,12 +65,16 @@ public class HomeActivity extends AppCompatActivity implements AccountManagerCal
 
     private Gson gson = new GsonBuilder().setDateFormat("yyyy-MM-dd'T'HH:mm:ssZ").create();
     private OkHttpClient client = new OkHttpClient();
+    private ITask apiCaller;
+    private Retrofit retrofit;
 
     private ArrayList<Task> mTasks = new ArrayList<Task>();
+    private TaskAdapter adapter;
     private SharedPreferences prefs;
     private SharedPreferences.Editor mEditor;
 
     @Bind(R.id.taskRecyclerView)RecyclerView mTaskListView;
+    @Bind(R.id.new_task_button)Button newTaskButton;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -77,15 +96,30 @@ public class HomeActivity extends AppCompatActivity implements AccountManagerCal
        // accountManager.getAuthToken(acc, type, null, this, this, null);
 
 
-        getTasks();
+        adapter = new TaskAdapter(this, mTasks);
 
-        TaskAdapter adapter = new TaskAdapter(this, mTasks);
-        mTaskListView.setAdapter(adapter);
 
         RecyclerView.LayoutManager layoutManager = new LinearLayoutManager(this);
         mTaskListView.setLayoutManager(layoutManager);
 
         mTaskListView.setHasFixedSize(true);
+
+
+        newTaskButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                onClickNewTask();
+            }
+        });
+
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        mTaskListView.setAdapter(adapter);
+        getAllTasks();
+
     }
 
 
@@ -127,8 +161,105 @@ public class HomeActivity extends AppCompatActivity implements AccountManagerCal
         }).start();
     }
 
-    public void getTasks() {
-        new ApiCaller(HomeActivity.this).getAllTasks();
+    public void getAllTasks() {
+        client = assignInterceptorWithToken();
+        retrofit = new Retrofit.Builder()
+                .baseUrl(BASE_URL)
+                .addConverterFactory(GsonConverterFactory.create(gson))
+                .client(client)
+                .build();
+        apiCaller = retrofit.create(ITask.class);
+        Call<ResponseBody> getTasks = apiCaller.getAllTasks();
+
+        getTasks.enqueue(new Callback<ResponseBody>() {
+            @Override
+            public void onResponse(Call<ResponseBody> call, retrofit2.Response<ResponseBody> response) {
+
+                try {
+
+                    String taskArray = response.body().string();
+
+                    try {
+                        JSONArray tasks = new JSONArray(taskArray);
+                        for (int i = 0; i < tasks.length(); i++) {
+                            JSONObject jsonTask = tasks.getJSONObject(i);
+                            Task task = new Task();
+                            if (!jsonTask.isNull(JSONConstants.JSON_TASK_TITLE)) {
+                                task.setTaskTitle(jsonTask.getString(JSONConstants.JSON_TASK_TITLE));
+                            }
+                            if (!jsonTask.isNull(JSONConstants.JSON_TASK_DETAILS)) {
+                                task.setTaskDetails(jsonTask.getString(JSONConstants.JSON_TASK_DETAILS));
+                            }
+                            if (!jsonTask.isNull(JSONConstants.JSON_TASK_LONGITUDE)) {
+                                task.setLongitude(jsonTask.getDouble(JSONConstants.JSON_TASK_LONGITUDE));
+                            }
+                            if (!jsonTask.isNull(JSONConstants.JSON_TASK_LATITUDE)) {
+                                task.setLatitude(jsonTask.getDouble(JSONConstants.JSON_TASK_LATITUDE));
+                            }
+                            if (!jsonTask.isNull(JSONConstants.JSON_TASK_LOCATION)) {
+                                task.setLocationName(jsonTask.getString(JSONConstants.JSON_TASK_LOCATION));
+                            }
+                            if (!jsonTask.isNull(JSONConstants.JSON_TASK_DUE_DATE)) {
+                                task.setDueDate(jsonTask.getString(JSONConstants.JSON_TASK_DUE_DATE));
+                            }
+
+                            mTasks.add(task);
+                        }
+
+
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
+
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                for (String head : response.headers().names()) {
+                    Log.v(TAG, head + " " + response.headers().values(head));
+                }
+
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        adapter.notifyDataSetChanged();
+                    }
+                });
+
+
+            }
+
+            @Override
+            public void onFailure(Call<ResponseBody> call, Throwable t) {
+                Log.e(TAG, "Error: " + t.toString());
+            }
+        });
+    }
+
+    private OkHttpClient assignInterceptorWithToken() {
+
+        final String token = prefs.getString(SharedPreferencesConstants.PREFS_TOKEN, (String) null);
+        Log.d(TAG, "before adding interceptor, token = " + token);
+        return client.newBuilder().addInterceptor(new Interceptor() {
+            @Override
+            public okhttp3.Response intercept(Chain chain) throws IOException {
+                Request original = chain.request();
+
+                Request request = original.newBuilder()
+                        .method(original.method(), original.body())
+                        .header("X-AUTH-TOKEN", token)
+                        .build();
+                return chain.proceed(request);
+            }
+        }).build();
+    }
+
+    public void onClickNewTask() {
+        DialogFragment dialog = AddTaskFragment.newInstance();
+        Log.d(TAG, "They call me Al");
+        if (dialog.getDialog() != null) {
+            Log.d(TAG, "Oh good not null");
+            dialog.getDialog().setCanceledOnTouchOutside(false);
+        }
     }
 
 }

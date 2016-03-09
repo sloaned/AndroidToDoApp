@@ -13,10 +13,19 @@
     tools:context="com.example.catalyst.androidtodo.activities.HomeActivity"
     tools:showIn="@layout/activity_home">
 
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/new_task_button"
+        android:text="New Task"
+        android:layout_alignParentLeft="true"
+        android:paddingBottom="8dp"/>
+
     <android.support.v7.widget.RecyclerView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:id="@+id/taskRecyclerView" />
+        android:id="@+id/taskRecyclerView"
+        android:layout_below="@+id/new_task_button"/>
 
 
 </RelativeLayout>
