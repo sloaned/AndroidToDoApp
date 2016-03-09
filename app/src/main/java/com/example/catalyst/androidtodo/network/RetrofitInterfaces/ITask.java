@@ -4,6 +4,7 @@ import com.example.catalyst.androidtodo.models.Task;
 
 import okhttp3.ResponseBody;
 import retrofit2.Call;
+import retrofit2.http.Body;
 import retrofit2.http.DELETE;
 import retrofit2.http.GET;
 import retrofit2.http.POST;
@@ -22,9 +23,9 @@ public interface ITask {
     Boolean deleteTask(int id);
 
     @PUT("task")
-    Boolean editTask(Task task);
+    Boolean editTask(@Body Task task);
 
     @POST("task")
-    Call<Task> createTask(Task task);
+    Call<ResponseBody> createTask(@Body Task task);
 
 }

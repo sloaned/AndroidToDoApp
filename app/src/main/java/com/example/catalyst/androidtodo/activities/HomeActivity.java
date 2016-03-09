@@ -55,7 +55,7 @@ import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 import retrofit2.http.Body;
 
-public class HomeActivity extends AppCompatActivity implements AccountManagerCallback<Bundle>{
+public class HomeActivity extends AppCompatActivity implements AccountManagerCallback<Bundle>, AddTaskFragment.getAllMethods {
 
     private final String TAG = getClass().getSimpleName();
     private AccountManager accountManager;
@@ -115,11 +115,26 @@ public class HomeActivity extends AppCompatActivity implements AccountManagerCal
     }
 
     @Override
+    public void updateList() {
+        getAllTasks();
+    }
+
+    @Override
     public void onResume() {
-        super.onResume();
+        Log.d(TAG, "resumed!");
+
         mTaskListView.setAdapter(adapter);
         getAllTasks();
 
+        //mTaskListView.invalidate();
+        super.onResume();
+
+    }
+
+    @Override
+    public void onPause() {
+        Log.d(TAG, "paused!");
+        super.onPause();
     }
 
 
@@ -162,6 +177,7 @@ public class HomeActivity extends AppCompatActivity implements AccountManagerCal
     }
 
     public void getAllTasks() {
+        mTasks.clear();
         client = assignInterceptorWithToken();
         retrofit = new Retrofit.Builder()
                 .baseUrl(BASE_URL)
@@ -255,11 +271,11 @@ public class HomeActivity extends AppCompatActivity implements AccountManagerCal
 
     public void onClickNewTask() {
         DialogFragment dialog = AddTaskFragment.newInstance();
-        Log.d(TAG, "They call me Al");
         if (dialog.getDialog() != null) {
-            Log.d(TAG, "Oh good not null");
             dialog.getDialog().setCanceledOnTouchOutside(false);
         }
+        dialog.show(this.getSupportFragmentManager(), "dialog");
+        getAllTasks();
     }
 
 }
