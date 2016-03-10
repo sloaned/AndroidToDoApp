@@ -129,11 +129,13 @@ public class AddTaskFragment extends DialogFragment {
                     task.setLocationName(taskLocation);
 
                     String taskLocationCoordinates = "";
-                    if (taskLocation != null && !taskLocation.equals("")) {
+
+                    addTaskToDatabase();
+                    /* if (taskLocation != null && !taskLocation.equals("")) {
                         getLocationCoordinates(taskLocation);
                     } else {
                         addTaskToDatabase();
-                    }
+                    }  */
 
                 }
 
@@ -184,7 +186,7 @@ public class AddTaskFragment extends DialogFragment {
         void onFragmentInteraction(Uri uri);
     }
 
-    public void getLocationCoordinates(String location) {
+   /* public void getLocationCoordinates(String location) {
         location = location.replaceAll("\\s+","+");
         final String GOOGLE_MAPS_URL = "https://maps.googleapis.com/maps/api/geocode/json?address=" + location  + "&key=" + BuildConfig.APIKEY;
 
@@ -239,7 +241,7 @@ public class AddTaskFragment extends DialogFragment {
         }
 
 
-    }
+    }  */
 
 
 

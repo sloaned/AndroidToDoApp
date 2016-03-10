@@ -16,9 +16,7 @@ android {
         versionName "1.0"
     }
     buildTypes {
-        debug {
-            buildConfigField "String", "APIKEY", project.property("GoogleMapsApiKey")
-        }
+
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
