@@ -278,4 +278,5 @@ public class HomeActivity extends AppCompatActivity implements AccountManagerCal
         getAllTasks();
     }
 
+
 }

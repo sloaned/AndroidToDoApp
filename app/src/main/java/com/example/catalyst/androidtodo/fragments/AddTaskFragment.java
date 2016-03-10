@@ -1,7 +1,9 @@
 package com.example.catalyst.androidtodo.fragments;
 
 import android.app.AlertDialog;
+import android.app.DatePickerDialog;
 import android.app.Dialog;
+import android.app.TimePickerDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -17,8 +19,10 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.Button;
+import android.widget.DatePicker;
 import android.widget.EditText;
 import android.widget.TextView;
+import android.widget.TimePicker;
 
 import com.example.catalyst.androidtodo.BuildConfig;
 import com.example.catalyst.androidtodo.R;
@@ -36,6 +40,8 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
+import java.util.Calendar;
+import java.util.Date;
 
 import butterknife.Bind;
 import butterknife.ButterKnife;
@@ -93,6 +99,62 @@ public class AddTaskFragment extends DialogFragment {
 
         addTaskView = inflater.inflate(R.layout.add_new_task, null);
 
+        Button datePickerButton = (Button) addTaskView.findViewById(R.id.newTaskDatePickerBtn);
+        datePickerButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                final Calendar calendar = Calendar.getInstance();
+                int yy = calendar.get(Calendar.YEAR);
+                int mm = calendar.get(Calendar.MONTH);
+                int dd = calendar .get(Calendar.DAY_OF_MONTH);
+
+                DatePickerDialog datePicker = new DatePickerDialog(getActivity(), new DatePickerDialog.OnDateSetListener() {
+                    @Override
+                    public void onDateSet(DatePicker view, int year, int monthOfYear, int dayOfMonth) {
+                        String date = String.valueOf(monthOfYear+1) + "/" + String.valueOf(dayOfMonth)
+                                + "/" + String.valueOf(year);
+                        TextView dateView = (TextView) addTaskView.findViewById(R.id.newTaskDateValue);
+                        dateView.setText(date);
+                    }
+                }, yy, mm, dd);
+                datePicker.show();
+            }
+        });
+        Button timePickerButton = (Button) addTaskView.findViewById(R.id.newTaskTimePickerBtn);
+        timePickerButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+                final Calendar calendar = Calendar.getInstance();
+                int hh = calendar.get(Calendar.HOUR_OF_DAY);
+                int mm = calendar.get(Calendar.MINUTE);
+                TimePickerDialog timePicker = new TimePickerDialog(getActivity(), new TimePickerDialog.OnTimeSetListener() {
+                    @Override
+                    public void onTimeSet(TimePicker view, int hour, int minute) {
+
+                        String meridiem = "AM";
+                        if (hour > 11) {
+                            meridiem = "PM";
+                        }
+                        if (hour == 0) {
+                            hour = 12;
+                        }
+                        if (hour > 12) {
+                            hour -= 12;
+                        }
+                        String time = String.valueOf(hour) + ":";
+                        if (minute < 10) {
+                            time += "0";
+                        }
+                        time += String.valueOf(minute) + " " + meridiem;
+                        TextView timeView = (TextView) addTaskView.findViewById(R.id.newTaskTimeValue);
+                        timeView.setText(time);
+                    }
+                }, hh, mm, false);
+                timePicker.show();
+            }
+        });
+
         builder.setView(addTaskView);
 
         builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
@@ -104,20 +166,10 @@ public class AddTaskFragment extends DialogFragment {
                 String taskTitle = taskTitleView.getText().toString();
                 EditText taskDetailView = (EditText)  addTaskView.findViewById(R.id.newTaskDetailsValue);
                 String taskDetails = taskDetailView.getText().toString();
-                EditText taskDueDateView = (EditText) addTaskView.findViewById(R.id.newTaskDueDateValue);
-                String taskDueDate = taskDueDateView.getText().toString();
+                //EditText taskDueDateView = (EditText) addTaskView.findViewById(R.id.newTaskDueDateValue);
+               // String taskDueDate = taskDueDateView.getText().toString();
                 EditText taskLocationView = (EditText) addTaskView.findViewById(R.id.newTaskLocationValue);
                 String taskLocation = taskLocationView.getText().toString();
-                Button datePickerButton = (Button) addTaskView.findViewById(R.id.newTaskDatePickerBtn);
-                datePickerButton.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        Log.d(TAG, "Button clicked");
-                        DialogFragment newFragment = new DatePickerFragment();
-                        newFragment.show(getFragmentManager(), "Date Picker");
-                    }
-                });
-
 
 
                 if (taskTitle != null && !taskTitle.equals((String) null) && !taskTitle.equals("")) {
@@ -125,7 +177,7 @@ public class AddTaskFragment extends DialogFragment {
                     task = new Task();
                     task.setTaskTitle(taskTitle);
                     task.setTaskDetails(taskDetails);
-                    task.setDueDate(taskDueDate);
+                    //task.setDueDate(taskDueDate);
                     task.setLocationName(taskLocation);
 
                     String taskLocationCoordinates = "";
@@ -281,13 +333,36 @@ public class AddTaskFragment extends DialogFragment {
             }
         });
     }
-    /*
+
     public void onDateButtonClicked(View v) {
-        DialogFragment newFragment = new DatePickerFragment();
-        newFragment.show(getFragmentManager(), "Date Picker");
-    } */
+        final Calendar calendar = Calendar.getInstance();
+        int yy = calendar.get(Calendar.YEAR);
+        int mm = calendar.get(Calendar.MONTH);
+        int dd = calendar .get(Calendar.DAY_OF_MONTH);
 
+        DatePickerDialog datePicker = new DatePickerDialog(getActivity(), new DatePickerDialog.OnDateSetListener() {
+            @Override
+            public void onDateSet(DatePicker view, int year, int monthOfYear, int dayOfMonth) {
+                String date = String.valueOf(monthOfYear+1) + "/" + String.valueOf(dayOfMonth)
+                        + "/" + String.valueOf(year);
+                TextView dateView = (TextView) addTaskView.findViewById(R.id.newTaskDateValue);
+                dateView.setText(date);
+            }
+        }, yy, mm, dd);
+        datePicker.show();
+        //DialogFragment newFragment = new DatePickerFragment();
+        //newFragment.show(getFragmentManager(), "Date Picker");
+    }
 
+    public void updateDate(String date) {
+        TextView dateView = (TextView) addTaskView.findViewById(R.id.newTaskDateValue);
+        dateView.setText(date);
+    }
+
+    public void updateTime(String time) {
+        TextView timeView = (TextView) addTaskView.findViewById(R.id.newTaskTimeValue);
+        timeView.setText(time);
+    }
 
 
 
