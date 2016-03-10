@@ -12,9 +12,11 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.v4.app.DialogFragment;
+
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 
@@ -106,10 +108,19 @@ public class AddTaskFragment extends DialogFragment {
                 String taskDueDate = taskDueDateView.getText().toString();
                 EditText taskLocationView = (EditText) addTaskView.findViewById(R.id.newTaskLocationValue);
                 String taskLocation = taskLocationView.getText().toString();
+                Button datePickerButton = (Button) addTaskView.findViewById(R.id.newTaskDatePickerBtn);
+                datePickerButton.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        Log.d(TAG, "Button clicked");
+                        DialogFragment newFragment = new DatePickerFragment();
+                        newFragment.show(getFragmentManager(), "Date Picker");
+                    }
+                });
 
 
 
-                if (taskTitle != null && !taskTitle.equals((String) null)) {
+                if (taskTitle != null && !taskTitle.equals((String) null) && !taskTitle.equals("")) {
 
                     task = new Task();
                     task.setTaskTitle(taskTitle);
@@ -268,6 +279,11 @@ public class AddTaskFragment extends DialogFragment {
             }
         });
     }
+    /*
+    public void onDateButtonClicked(View v) {
+        DialogFragment newFragment = new DatePickerFragment();
+        newFragment.show(getFragmentManager(), "Date Picker");
+    } */
 
 
 

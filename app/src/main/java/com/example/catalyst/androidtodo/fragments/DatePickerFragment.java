@@ -1,9 +1,12 @@
 package com.example.catalyst.androidtodo.fragments;
 
+import android.app.AlertDialog;
 import android.app.DatePickerDialog;
 import android.app.Dialog;
-import android.app.DialogFragment;
+import android.support.v4.app.DialogFragment;
 import android.os.Bundle;
+import android.util.Log;
+import android.widget.DatePicker;
 
 import java.util.Calendar;
 
@@ -12,7 +15,7 @@ import java.util.Calendar;
  */
 public class DatePickerFragment extends DialogFragment implements DatePickerDialog.OnDateSetListener {
 
-    @Override
+    public static final String TAG = DatePickerFragment.class.getSimpleName();
     public Dialog onCreateDialog(Bundle savedInstanceState) {
 
         final Calendar c = Calendar.getInstance();
@@ -20,10 +23,14 @@ public class DatePickerFragment extends DialogFragment implements DatePickerDial
         int month = c.get(Calendar.MONTH);
         int day = c.get(Calendar.DAY_OF_MONTH);
 
-        return new DatePickerDialog(getActivity(), this, year, month, day);
+        DatePickerDialog dpd = new DatePickerDialog(getActivity(), AlertDialog.THEME_HOLO_LIGHT, this, year, month, day);
+
+        dpd.setTitle("Set a date");
+        return dpd;
+
     }
 
     public void onDateSet(DatePicker view, int year, int month, int day) {
-        
+        Log.d(TAG, "On date set");
     }
 }

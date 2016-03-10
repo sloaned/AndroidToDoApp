@@ -57,6 +57,12 @@
             android:layout_height="wrap_content"
             android:id="@+id/newTaskDueDateValue"/>
 
+        <Button
+            android:id="@+id/newTaskDatePickerBtn"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Set Date" />
+
     </LinearLayout>
 
     <LinearLayout
