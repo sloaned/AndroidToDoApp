@@ -120,39 +120,10 @@ public class AddTaskFragment extends DialogFragment {
                     String taskLocationCoordinates = "";
                     if (taskLocation != null && !taskLocation.equals("")) {
                         getLocationCoordinates(taskLocation);
+                    } else {
+                        addTaskToDatabase();
                     }
 
-                    if (task.getLatitude() != 0) {
-                        Log.v(TAG, "Latitude = " + task.getLatitude() + ", longitude = " + task.getLongitude());
-                    }
-
-
-                    client = assignInterceptorWithToken();
-                    retrofit = new Retrofit.Builder()
-                            .baseUrl(BASE_URL)
-                            .addConverterFactory(GsonConverterFactory.create(gson))
-                            .client(client)
-                            .build();
-                    apiCaller = retrofit.create(ITask.class);
-
-
-
-                    Call<ResponseBody> addTask = apiCaller.createTask(task);
-
-                    addTask.enqueue(new Callback<ResponseBody>() {
-                        @Override
-                        public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
-                            Log.v(TAG, "Success!");
-                            if (context instanceof HomeActivity) {
-                                ((HomeActivity) context).updateList();
-                            }
-                        }
-
-                        @Override
-                        public void onFailure(Call<ResponseBody> call, Throwable t) {
-                            Log.e(TAG, "Failure!");
-                        }
-                    });
                 }
 
             }
@@ -216,6 +187,7 @@ public class AddTaskFragment extends DialogFragment {
                 @Override
                 public void onFailure(okhttp3.Call call, IOException e) {
                     Log.e(TAG, e.getMessage());
+                    addTaskToDatabase();
                 }
 
                 @Override
@@ -232,9 +204,14 @@ public class AddTaskFragment extends DialogFragment {
                                     JSONObject firstResult = results.getJSONObject(0);
                                     JSONObject geometry = firstResult.getJSONObject("geometry");
                                     JSONObject location = geometry.getJSONObject("location");
+                                    String latitude = location.getString("lat");
+                                    String longitude = location.getString("lng");
                                     task.setLatitude(location.getDouble("lat"));
                                     task.setLongitude(location.getDouble("lng"));
+                                    getLocationTimezone(latitude, longitude);
                                 }
+
+
                             }
 
                         }
@@ -246,6 +223,8 @@ public class AddTaskFragment extends DialogFragment {
                 }
             });
 
+        } else {
+            addTaskToDatabase();
         }
 
 
@@ -253,8 +232,41 @@ public class AddTaskFragment extends DialogFragment {
 
 
 
-    public void getLocationTimezone(String coordinates) {
+    public void getLocationTimezone(String lat, String lng) {
+        String coordinates = lat + ", " + lng;
 
+
+        // final String GOOGLE_TIMEZONE_API =
+    }
+
+
+    public void addTaskToDatabase() {
+        client = assignInterceptorWithToken();
+        retrofit = new Retrofit.Builder()
+                .baseUrl(BASE_URL)
+                .addConverterFactory(GsonConverterFactory.create(gson))
+                .client(client)
+                .build();
+        apiCaller = retrofit.create(ITask.class);
+
+
+
+        Call<ResponseBody> addTask = apiCaller.createTask(task);
+
+        addTask.enqueue(new Callback<ResponseBody>() {
+            @Override
+            public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
+                Log.v(TAG, "Success!");
+                if (context instanceof HomeActivity) {
+                    ((HomeActivity) context).updateList();
+                }
+            }
+
+            @Override
+            public void onFailure(Call<ResponseBody> call, Throwable t) {
+                Log.e(TAG, "Failure!");
+            }
+        });
     }
 
 
