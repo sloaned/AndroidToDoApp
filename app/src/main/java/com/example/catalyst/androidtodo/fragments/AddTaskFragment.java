@@ -6,6 +6,8 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
@@ -16,6 +18,7 @@ import android.view.View;
 import android.widget.EditText;
 import android.widget.TextView;
 
+import com.example.catalyst.androidtodo.BuildConfig;
 import com.example.catalyst.androidtodo.R;
 import com.example.catalyst.androidtodo.activities.HomeActivity;
 import com.example.catalyst.androidtodo.models.Task;
@@ -25,6 +28,10 @@ import com.example.catalyst.androidtodo.network.RetrofitInterfaces.IUsers;
 import com.example.catalyst.androidtodo.util.SharedPreferencesConstants;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.io.IOException;
 
@@ -48,6 +55,8 @@ public class AddTaskFragment extends DialogFragment {
     public static final String TAG = AddTaskFragment.class.getSimpleName();
 
     private static final String BASE_URL = "http://pc30120.catalystsolves.com:8080/";
+
+    private Task task;
 
     private Gson gson = new GsonBuilder().setDateFormat("yyyy-MM-dd'T'HH:mm:ssZ").create();
     private OkHttpClient client = new OkHttpClient();
@@ -75,8 +84,6 @@ public class AddTaskFragment extends DialogFragment {
     @Override
     public Dialog onCreateDialog(Bundle savedInstanceState) {
         context = getActivity();
-        Log.d(TAG, "here we are in the dialogue fragment");
-
 
         AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
         LayoutInflater inflater = getActivity().getLayoutInflater();
@@ -92,7 +99,6 @@ public class AddTaskFragment extends DialogFragment {
 
 
                 EditText taskTitleView = (EditText) addTaskView.findViewById(R.id.newTaskTitleValue);
-                Log.d(TAG, "Real simple test, taskTitleView is null? : " + (taskTitleView == null));
                 String taskTitle = taskTitleView.getText().toString();
                 EditText taskDetailView = (EditText)  addTaskView.findViewById(R.id.newTaskDetailsValue);
                 String taskDetails = taskDetailView.getText().toString();
@@ -105,16 +111,21 @@ public class AddTaskFragment extends DialogFragment {
 
                 if (taskTitle != null && !taskTitle.equals((String) null)) {
 
-                    String taskLocationCoordinates = "";
-                    if (taskLocation != null && !taskLocation.equals("")) {
-                        taskLocationCoordinates = getLocationInfo(taskLocation);
-                    }
-
-                    Task task = new Task();
+                    task = new Task();
                     task.setTaskTitle(taskTitle);
                     task.setTaskDetails(taskDetails);
                     task.setDueDate(taskDueDate);
                     task.setLocationName(taskLocation);
+
+                    String taskLocationCoordinates = "";
+                    if (taskLocation != null && !taskLocation.equals("")) {
+                        getLocationCoordinates(taskLocation);
+                    }
+
+                    if (task.getLatitude() != 0) {
+                        Log.v(TAG, "Latitude = " + task.getLatitude() + ", longitude = " + task.getLongitude());
+                    }
+
 
                     client = assignInterceptorWithToken();
                     retrofit = new Retrofit.Builder()
@@ -191,8 +202,73 @@ public class AddTaskFragment extends DialogFragment {
         void onFragmentInteraction(Uri uri);
     }
 
-    public String getLocationCoordinates(String location) {
+    public void getLocationCoordinates(String location) {
+        location = location.replaceAll("\\s+","+");
+        final String GOOGLE_MAPS_URL = "https://maps.googleapis.com/maps/api/geocode/json?address=" + location  + "&key=" + BuildConfig.APIKEY;
 
-        
+        if (isNetworkAvailable() ) {
+            OkHttpClient okHttpClient = new OkHttpClient();
+            okhttp3.Request request = new Request.Builder()
+                    .url(GOOGLE_MAPS_URL)
+                    .build();
+            okhttp3.Call call = okHttpClient.newCall(request);
+            call.enqueue(new okhttp3.Callback() {
+                @Override
+                public void onFailure(okhttp3.Call call, IOException e) {
+                    Log.e(TAG, e.getMessage());
+                }
+
+                @Override
+                public void onResponse(okhttp3.Call call, okhttp3.Response response) throws IOException {
+                    try {
+                        String jsonData = response.body().string();
+                        Log.v(TAG, jsonData);
+                        if (response.isSuccessful()) {
+                            JSONObject data = new JSONObject(jsonData);
+                            String status = data.getString("status");
+                            if (status.equals("OK")) {
+                                JSONArray results = data.getJSONArray("results");
+                                if (results.length() > 0) {
+                                    JSONObject firstResult = results.getJSONObject(0);
+                                    JSONObject geometry = firstResult.getJSONObject("geometry");
+                                    JSONObject location = geometry.getJSONObject("location");
+                                    task.setLatitude(location.getDouble("lat"));
+                                    task.setLongitude(location.getDouble("lng"));
+                                }
+                            }
+
+                        }
+                    } catch (IOException e) {
+                        Log.e(TAG, "Exception caught: ", e);
+                    } catch (JSONException e) {
+                        Log.e(TAG, "Exception caught: ", e);
+                    }
+                }
+            });
+
+        }
+
+
+    }
+
+
+
+    public void getLocationTimezone(String coordinates) {
+
+    }
+
+
+
+
+
+
+    private boolean isNetworkAvailable() {
+        ConnectivityManager manager = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo networkInfo = manager.getActiveNetworkInfo();
+        boolean isAvailable = false;
+        if (networkInfo != null && networkInfo.isConnected()) {
+            isAvailable = true;
+        }
+        return isAvailable;
     }
 }
