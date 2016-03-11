@@ -40,6 +40,8 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 
@@ -65,6 +67,8 @@ public class AddTaskFragment extends DialogFragment {
     private static final String BASE_URL = "http://pc30120.catalystsolves.com:8080/";
 
     private Task task;
+    private long dateInMilliseconds = 0;
+    private long timeInMilliseconds = 0;
 
     private Gson gson = new GsonBuilder().setDateFormat("yyyy-MM-dd'T'HH:mm:ssZ").create();
     private OkHttpClient client = new OkHttpClient();
@@ -75,9 +79,7 @@ public class AddTaskFragment extends DialogFragment {
     private SharedPreferences.Editor mEditor;
     private Retrofit retrofit;
 
-    private ILoginUser loginUser;
     private ITask apiCaller;
-    private IUsers userCall;
 
     private View addTaskView;
 
@@ -111,10 +113,22 @@ public class AddTaskFragment extends DialogFragment {
                 DatePickerDialog datePicker = new DatePickerDialog(getActivity(), new DatePickerDialog.OnDateSetListener() {
                     @Override
                     public void onDateSet(DatePicker view, int year, int monthOfYear, int dayOfMonth) {
-                        String date = String.valueOf(monthOfYear+1) + "/" + String.valueOf(dayOfMonth)
+
+                        String dateString = String.valueOf(monthOfYear+1) + "/" + String.valueOf(dayOfMonth)
                                 + "/" + String.valueOf(year);
+
+
                         TextView dateView = (TextView) addTaskView.findViewById(R.id.newTaskDateValue);
-                        dateView.setText(date);
+                        dateView.setText(dateString);
+
+                        SimpleDateFormat formatter = new SimpleDateFormat("MM/dd/yyyy");
+                        try {
+                            Date date = formatter.parse(dateString);
+                            dateInMilliseconds = date.getTime();
+                            Log.d(TAG, "date in milliseconds = " + dateInMilliseconds);
+                        } catch (ParseException e) {
+                            Log.e(TAG, e.getMessage());
+                        }
                     }
                 }, yy, mm, dd);
                 datePicker.show();
@@ -131,6 +145,19 @@ public class AddTaskFragment extends DialogFragment {
                 TimePickerDialog timePicker = new TimePickerDialog(getActivity(), new TimePickerDialog.OnTimeSetListener() {
                     @Override
                     public void onTimeSet(TimePicker view, int hour, int minute) {
+                        long milliSeconds = (hour * 3600 * 1000) + (minute * 60 * 1000);
+                        timeInMilliseconds = milliSeconds;
+                        if (dateInMilliseconds == 0) {
+                            Date date = new Date();
+                            long milliseconds = date.getTime();
+                            milliseconds += timeInMilliseconds;
+                            task.setDueDate(String.valueOf(milliseconds));
+                        }
+                        else {
+                            long milliseconds = dateInMilliseconds + timeInMilliseconds;
+                            task.setDueDate(String.valueOf(milliseconds));
+                        }
+                        Log.d(TAG, "time in milliseconds = " + timeInMilliseconds);
 
                         String meridiem = "AM";
                         if (hour > 11) {
