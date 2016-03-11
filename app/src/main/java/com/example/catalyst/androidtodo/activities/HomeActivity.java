@@ -16,12 +16,14 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
+import android.support.v7.widget.helper.ItemTouchHelper;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 
+import com.daimajia.swipe.SwipeLayout;
 import com.example.catalyst.androidtodo.R;
 import com.example.catalyst.androidtodo.adapters.TaskAdapter;
 import com.example.catalyst.androidtodo.fragments.AddTaskFragment;
@@ -103,14 +105,6 @@ public class HomeActivity extends AppCompatActivity implements AccountManagerCal
         mTaskListView.setLayoutManager(layoutManager);
 
         mTaskListView.setHasFixedSize(true);
-
-
-        newTaskButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                onClickNewTask();
-            }
-        });
 
     }
 

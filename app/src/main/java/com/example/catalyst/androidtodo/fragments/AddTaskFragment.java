@@ -213,10 +213,7 @@ public class AddTaskFragment extends DialogFragment {
 
                     //addTaskToDatabase();
                     String tz = TimeZone.getDefault().getID();
-                    Log.d(TAG, "available tz ids: ");
-                    for (String s : TimeZone.getAvailableIDs()) {
-                        Log.d(TAG, s);
-                    }
+
                     Log.d(TAG, "The timezone id is " + tz);
                     if (taskLocation == null || taskLocation.equals("") && task.getDueDate() == null) {
                         task.setTimeZone(tz);
@@ -258,7 +255,6 @@ public class AddTaskFragment extends DialogFragment {
         prefs = PreferenceManager.getDefaultSharedPreferences(context);
 
         final String token = prefs.getString(SharedPreferencesConstants.PREFS_TOKEN, (String) null);
-        Log.d(TAG, "before adding interceptor, token = " + token);
         return client.newBuilder().addInterceptor(new Interceptor() {
             @Override
             public okhttp3.Response intercept(Chain chain) throws IOException {
@@ -280,7 +276,9 @@ public class AddTaskFragment extends DialogFragment {
     public void getLocationCoordinates(String location) {
         location = location.replaceAll("\\s+","+");
         final String GOOGLE_MAPS_URL = "https://maps.googleapis.com/maps/api/geocode/json?address="
-                + location  + "&key=" + R.string.google_maps_apikey;
+                + location  + "&key=" + "AIzaSyDTlAi9krTLWAoa8vfYH5fmBF2FsBM-QXg";
+
+        Log.d(TAG, "url = " + GOOGLE_MAPS_URL);
 
         if (isNetworkAvailable() ) {
             OkHttpClient okHttpClient = new OkHttpClient();
@@ -348,7 +346,9 @@ public class AddTaskFragment extends DialogFragment {
 
 
         final String GOOGLE_TIMEZONE_API = "https://maps.googleapis.com/maps/api/timezone/json?location=" + coordinates
-                + "&timestamp=" + timeInSeconds + "&key=" + R.string.google_timezone_apikey;
+                + "&timestamp=" + timeInSeconds + "&key=" + "AIzaSyA6qL8z3XqZvFa-dVfCKx3dPMP6efxSad8";
+
+        Log.d(TAG, "timezone url = " + GOOGLE_TIMEZONE_API);
 
         if (isNetworkAvailable() ) {
             OkHttpClient okHttpClient = new OkHttpClient();
