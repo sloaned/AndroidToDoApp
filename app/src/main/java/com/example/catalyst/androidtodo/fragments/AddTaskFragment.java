@@ -280,7 +280,7 @@ public class AddTaskFragment extends DialogFragment {
     public void getLocationCoordinates(String location) {
         location = location.replaceAll("\\s+","+");
         final String GOOGLE_MAPS_URL = "https://maps.googleapis.com/maps/api/geocode/json?address="
-                + location  + "&key=" + BuildConfig.APIKEY;
+                + location  + "&key=" + R.string.google_maps_apikey;
 
         if (isNetworkAvailable() ) {
             OkHttpClient okHttpClient = new OkHttpClient();
@@ -348,7 +348,7 @@ public class AddTaskFragment extends DialogFragment {
 
 
         final String GOOGLE_TIMEZONE_API = "https://maps.googleapis.com/maps/api/timezone/json?location=" + coordinates
-                + "&timestamp=" + timeInSeconds + "&key=" + BuildConfig.TZAPIKEY;
+                + "&timestamp=" + timeInSeconds + "&key=" + R.string.google_timezone_apikey;
 
         if (isNetworkAvailable() ) {
             OkHttpClient okHttpClient = new OkHttpClient();

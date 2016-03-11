@@ -16,14 +16,7 @@ android {
         versionName "1.0"
     }
     buildTypes {
-        debug {
-            buildConfigField "String", "APIKEY", project.property("GoogleMapsApiKey")
-            buildConfigField "String", "TZAPIKEY", project.property("GoogleTimezoneApiKey")
-        }
-
         release {
-            buildConfigField "String", "APIKEY", project.property("GoogleMapsApiKey")
-            buildConfigField "String", "TZAPIKEY", project.property("GoogleTimezoneApiKey")
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
