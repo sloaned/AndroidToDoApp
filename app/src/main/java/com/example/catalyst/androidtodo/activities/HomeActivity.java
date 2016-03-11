@@ -197,6 +197,7 @@ public class HomeActivity extends AppCompatActivity implements AccountManagerCal
 
                     try {
                         JSONArray tasks = new JSONArray(taskArray);
+                        Log.d(TAG, taskArray);
                         for (int i = 0; i < tasks.length(); i++) {
                             JSONObject jsonTask = tasks.getJSONObject(i);
                             Task task = new Task();
@@ -217,6 +218,9 @@ public class HomeActivity extends AppCompatActivity implements AccountManagerCal
                             }
                             if (!jsonTask.isNull(JSONConstants.JSON_TASK_DUE_DATE)) {
                                 task.setDueDate(jsonTask.getString(JSONConstants.JSON_TASK_DUE_DATE));
+                            }
+                            if (!jsonTask.isNull(JSONConstants.JSON_TASK_TIMEZONE)) {
+                                task.setTimeZone(jsonTask.getString(JSONConstants.JSON_TASK_TIMEZONE));
                             }
 
                             mTasks.add(task);

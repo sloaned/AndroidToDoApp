@@ -44,6 +44,7 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.TimeZone;
 
 import butterknife.Bind;
 import butterknife.ButterKnife;
@@ -66,7 +67,7 @@ public class AddTaskFragment extends DialogFragment {
 
     private static final String BASE_URL = "http://pc30120.catalystsolves.com:8080/";
 
-    private Task task;
+    private Task task = new Task();
     private long dateInMilliseconds = 0;
     private long timeInMilliseconds = 0;
 
@@ -155,6 +156,7 @@ public class AddTaskFragment extends DialogFragment {
                         }
                         else {
                             long milliseconds = dateInMilliseconds + timeInMilliseconds;
+
                             task.setDueDate(String.valueOf(milliseconds));
                         }
                         Log.d(TAG, "time in milliseconds = " + timeInMilliseconds);
@@ -201,7 +203,7 @@ public class AddTaskFragment extends DialogFragment {
 
                 if (taskTitle != null && !taskTitle.equals((String) null) && !taskTitle.equals("")) {
 
-                    task = new Task();
+                    //task = new Task();
                     task.setTaskTitle(taskTitle);
                     task.setTaskDetails(taskDetails);
                     //task.setDueDate(taskDueDate);
@@ -209,17 +211,27 @@ public class AddTaskFragment extends DialogFragment {
 
                     String taskLocationCoordinates = "";
 
-                    addTaskToDatabase();
-                    /* if (taskLocation != null && !taskLocation.equals("")) {
+                    //addTaskToDatabase();
+                    String tz = TimeZone.getDefault().getID();
+                    Log.d(TAG, "available tz ids: ");
+                    for (String s : TimeZone.getAvailableIDs()) {
+                        Log.d(TAG, s);
+                    }
+                    Log.d(TAG, "The timezone id is " + tz);
+                    if (taskLocation == null || taskLocation.equals("") && task.getDueDate() == null) {
+                        task.setTimeZone(tz);
+                    }
+
+                    if (taskLocation != null && !taskLocation.equals("")) {
                         getLocationCoordinates(taskLocation);
                     } else {
                         addTaskToDatabase();
-                    }  */
+                    }
 
                 }
 
             }
-        }) .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+        }).setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
 
@@ -243,7 +255,7 @@ public class AddTaskFragment extends DialogFragment {
     }
 
     private OkHttpClient assignInterceptorWithToken() {
-        prefs = PreferenceManager.getDefaultSharedPreferences(getActivity());
+        prefs = PreferenceManager.getDefaultSharedPreferences(context);
 
         final String token = prefs.getString(SharedPreferencesConstants.PREFS_TOKEN, (String) null);
         Log.d(TAG, "before adding interceptor, token = " + token);
@@ -265,9 +277,10 @@ public class AddTaskFragment extends DialogFragment {
         void onFragmentInteraction(Uri uri);
     }
 
-   /* public void getLocationCoordinates(String location) {
+    public void getLocationCoordinates(String location) {
         location = location.replaceAll("\\s+","+");
-        final String GOOGLE_MAPS_URL = "https://maps.googleapis.com/maps/api/geocode/json?address=" + location  + "&key=" + BuildConfig.APIKEY;
+        final String GOOGLE_MAPS_URL = "https://maps.googleapis.com/maps/api/geocode/json?address="
+                + location  + "&key=" + BuildConfig.APIKEY;
 
         if (isNetworkAvailable() ) {
             OkHttpClient okHttpClient = new OkHttpClient();
@@ -300,7 +313,12 @@ public class AddTaskFragment extends DialogFragment {
                                     String longitude = location.getString("lng");
                                     task.setLatitude(location.getDouble("lat"));
                                     task.setLongitude(location.getDouble("lng"));
-                                    getLocationTimezone(latitude, longitude);
+                                    if (task.getDueDate() != null && !task.getDueDate().equals("")) {
+                                        getLocationTimezone(latitude, longitude);
+                                    } else {
+                                        addTaskToDatabase();
+                                    }
+
                                 }
 
 
@@ -320,15 +338,53 @@ public class AddTaskFragment extends DialogFragment {
         }
 
 
-    }  */
+    }
 
 
 
     public void getLocationTimezone(String lat, String lng) {
-        String coordinates = lat + ", " + lng;
+        String coordinates = lat + "," + lng;
+        long timeInSeconds = (dateInMilliseconds + timeInMilliseconds)/1000;
 
 
-        // final String GOOGLE_TIMEZONE_API =
+        final String GOOGLE_TIMEZONE_API = "https://maps.googleapis.com/maps/api/timezone/json?location=" + coordinates
+                + "&timestamp=" + timeInSeconds + "&key=" + BuildConfig.TZAPIKEY;
+
+        if (isNetworkAvailable() ) {
+            OkHttpClient okHttpClient = new OkHttpClient();
+            okhttp3.Request request = new Request.Builder()
+                    .url(GOOGLE_TIMEZONE_API)
+                    .build();
+            okhttp3.Call call = okHttpClient.newCall(request);
+            call.enqueue(new okhttp3.Callback() {
+
+                @Override
+                public void onFailure(okhttp3.Call call, IOException e) {
+                    Log.e(TAG, e.getMessage());
+                    addTaskToDatabase();
+                }
+                @Override
+                public void onResponse(okhttp3.Call call, okhttp3.Response response) throws IOException {
+                    try {
+                        String jsonData = response.body().string();
+                        Log.v(TAG, jsonData);
+                        if (response.isSuccessful()) {
+                            JSONObject results = new JSONObject(jsonData);
+                            String timeZoneId = results.getString("timeZoneId");
+                            task.setTimeZone(timeZoneId);
+                        }
+                        addTaskToDatabase();
+
+                    } catch (IOException e) {
+                        Log.e(TAG, "Error getting data: " + e.getMessage());
+                        addTaskToDatabase();
+                    } catch (JSONException e) {
+                        Log.e(TAG, e.getMessage());
+                        addTaskToDatabase();
+                    }
+                }
+            });
+        }
     }
 
 

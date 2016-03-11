@@ -10,5 +10,6 @@ public class JSONConstants {
     public final static String JSON_TASK_DUE_DATE = "dueDate";
     public final static String JSON_TASK_LATITUDE = "latitude";
     public final static String JSON_TASK_LONGITUDE = "longitude";
-    public final static String JSON_TASK_LOCATION = "location";
+    public final static String JSON_TASK_LOCATION = "locationName";
+    public final static String JSON_TASK_TIMEZONE = "timeZone";
 }

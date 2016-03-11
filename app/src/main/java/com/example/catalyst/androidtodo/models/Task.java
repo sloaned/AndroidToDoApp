@@ -84,11 +84,11 @@ public class Task {
         this.dueDate = dueDate;
     }
 
-    private String getTimeZone() {
+    public String getTimeZone() {
         return timeZone;
     }
 
-    private void setTimeZone(String timeZone) {
+    public void setTimeZone(String timeZone) {
         this.timeZone = timeZone;
     }
 
