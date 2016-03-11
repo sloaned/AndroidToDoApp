@@ -26,6 +26,8 @@ public class Task {
     private double latitude;
     private double longitude;
 
+    private String timeZone;
+
     public String getLocationName() {
         return locationName;
     }
@@ -80,6 +82,14 @@ public class Task {
 
     public void setDueDate(String dueDate) {
         this.dueDate = dueDate;
+    }
+
+    private String getTimeZone() {
+        return timeZone;
+    }
+
+    private void setTimeZone(String timeZone) {
+        this.timeZone = timeZone;
     }
 
     public List<User> getUsers() {
