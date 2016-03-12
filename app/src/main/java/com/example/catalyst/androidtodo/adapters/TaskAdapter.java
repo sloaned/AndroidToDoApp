@@ -56,32 +56,26 @@ public class TaskAdapter extends RecyclerSwipeAdapter<TaskAdapter.TaskViewHolder
         holder.swipeLayout.addSwipeListener(new SwipeLayout.SwipeListener() {
             @Override
             public void onStartOpen(SwipeLayout layout) {
-                Log.d(TAG, "onStartOpen!");
             }
 
             @Override
             public void onOpen(SwipeLayout layout) {
-                Log.d(TAG, "onOpen!");
             }
 
             @Override
             public void onStartClose(SwipeLayout layout) {
-                Log.d(TAG, "onStartClose!");
             }
 
             @Override
             public void onClose(SwipeLayout layout) {
-                Log.d(TAG, "onClose!");
             }
 
             @Override
             public void onUpdate(SwipeLayout layout, int leftOffset, int topOffset) {
-                Log.d(TAG, "onUpdate!");
             }
 
             @Override
             public void onHandRelease(SwipeLayout layout, float xvel, float yvel) {
-                Log.d(TAG, "onHandRelease!");
             }
         });
 
@@ -97,8 +91,6 @@ public class TaskAdapter extends RecyclerSwipeAdapter<TaskAdapter.TaskViewHolder
 
     @Override
     public int getItemCount() {
-
-        Log.d(TAG, "size = " + mTasks.size());
         return mTasks.size();
     }
 

@@ -106,6 +106,14 @@ public class HomeActivity extends AppCompatActivity implements AccountManagerCal
 
         mTaskListView.setHasFixedSize(true);
 
+
+        newTaskButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                onClickNewTask();
+            }
+        });
+
     }
 
     @Override
