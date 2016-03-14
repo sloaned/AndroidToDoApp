@@ -20,10 +20,10 @@ public interface ITask {
     Call<ResponseBody> getAllTasks();
 
     @DELETE("task/{id}")
-    Boolean deleteTask(int id);
+    Call<ResponseBody> deleteTask(@Path("id") int id);
 
     @PUT("task")
-    Boolean editTask(@Body Task task);
+    Call<ResponseBody> editTask(@Body Task task);
 
     @POST("task")
     Call<ResponseBody> createTask(@Body Task task);

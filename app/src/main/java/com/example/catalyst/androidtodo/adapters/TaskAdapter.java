@@ -8,11 +8,14 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
+import android.widget.Button;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.catalyst.androidtodo.R;
+import com.example.catalyst.androidtodo.activities.HomeActivity;
 import com.example.catalyst.androidtodo.models.Task;
 
 import java.text.ParseException;
@@ -87,6 +90,7 @@ public class TaskAdapter extends RecyclerSwipeAdapter<TaskAdapter.TaskViewHolder
                 Toast.makeText(mContext, taskName, Toast.LENGTH_SHORT).show();
             }
         });
+
     }
 
     @Override
@@ -105,6 +109,7 @@ public class TaskAdapter extends RecyclerSwipeAdapter<TaskAdapter.TaskViewHolder
         public TextView mTaskDetailsText;
         public TextView mTaskDueDateText;
         public TextView mTaskLocation;
+        public ImageButton mTaskDeleteBtn;
 
         public TaskViewHolder(View itemView) {
             super(itemView);
@@ -113,12 +118,14 @@ public class TaskAdapter extends RecyclerSwipeAdapter<TaskAdapter.TaskViewHolder
             mTaskDetailsText = (TextView) itemView.findViewById(R.id.taskDetails);
             mTaskDueDateText = (TextView) itemView.findViewById(R.id.taskDueDate);
             mTaskLocation = (TextView) itemView.findViewById(R.id.taskLocation);
+            mTaskDeleteBtn = (ImageButton) itemView.findViewById(R.id.deleteTaskBtn);
+
 
           //  itemView.setOnClickListener(this);
 
         }
 
-        public void bindTask(Task task) {
+        public void bindTask(final Task task) {
             mTaskNameText.setText(task.getTaskTitle());
             long milliseconds = Long.valueOf(task.getDueDate());
             SimpleDateFormat dt = new SimpleDateFormat("EEE MMM dd hh:mm:ss z yyyy");
@@ -136,6 +143,18 @@ public class TaskAdapter extends RecyclerSwipeAdapter<TaskAdapter.TaskViewHolder
             mTaskDetailsText.setText(task.getTaskDetails());
             mTaskDueDateText.setText(dateString);
             mTaskLocation.setText(task.getLocationName());
+            mTaskDeleteBtn.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    if (mContext instanceof HomeActivity) {
+                        ((HomeActivity) mContext).deleteTask(task.getId());
+
+                    }
+
+                }
+            });
+
+
         }
         /*
         @Override
@@ -145,5 +164,8 @@ public class TaskAdapter extends RecyclerSwipeAdapter<TaskAdapter.TaskViewHolder
             Toast.makeText(mContext, taskName, Toast.LENGTH_SHORT).show();
         } */
     }
+
+
+
 
 }

@@ -12,4 +12,5 @@ public class JSONConstants {
     public final static String JSON_TASK_LONGITUDE = "longitude";
     public final static String JSON_TASK_LOCATION = "locationName";
     public final static String JSON_TASK_TIMEZONE = "timeZone";
+    public final static String JSON_TASK_ID = "id";
 }

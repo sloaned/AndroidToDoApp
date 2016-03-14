@@ -203,6 +203,9 @@ public class HomeActivity extends AppCompatActivity implements AccountManagerCal
                         for (int i = 0; i < tasks.length(); i++) {
                             JSONObject jsonTask = tasks.getJSONObject(i);
                             Task task = new Task();
+                            if (!jsonTask.isNull(JSONConstants.JSON_TASK_ID)) {
+                                task.setId(jsonTask.getInt(JSONConstants.JSON_TASK_ID));
+                            }
                             if (!jsonTask.isNull(JSONConstants.JSON_TASK_TITLE)) {
                                 task.setTaskTitle(jsonTask.getString(JSONConstants.JSON_TASK_TITLE));
                             }
@@ -282,6 +285,49 @@ public class HomeActivity extends AppCompatActivity implements AccountManagerCal
         }
         dialog.show(this.getSupportFragmentManager(), "dialog");
         getAllTasks();
+    }
+
+    public void deleteTask(final int id) {
+        //mTasks.clear();
+        client = assignInterceptorWithToken();
+        retrofit = new Retrofit.Builder()
+                .baseUrl(BASE_URL)
+                .addConverterFactory(GsonConverterFactory.create(gson))
+                .client(client)
+                .build();
+        apiCaller = retrofit.create(ITask.class);
+        Call<ResponseBody> deleteTask = apiCaller.deleteTask(id);
+        deleteTask.enqueue(new Callback<ResponseBody>() {
+            @Override
+            public void onResponse(Call<ResponseBody> call, retrofit2.Response<ResponseBody> response) {
+                Log.d(TAG, "delete successful");
+                int position = getTaskPosition(id);
+                if (position > -1) {
+                    mTasks.remove(position);
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            adapter.notifyDataSetChanged();
+                        }
+                    });
+                }
+
+            }
+
+            @Override
+            public void onFailure(Call<ResponseBody> call, Throwable t) {
+                Log.e(TAG, "problem with deleting task");
+            }
+        });
+    }
+
+    public int getTaskPosition(int id) {
+        for (int i = 0; i < mTasks.size(); i++) {
+            if (mTasks.get(i).getId() == id) {
+                return i;
+            }
+        }
+        return -1;
     }
 
 
