@@ -37,51 +37,80 @@
         <EditText
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:id="@+id/newTaskDetailsValue" />
+            android:id="@+id/newTaskDetailsValue"
+            android:textSize="12sp"/>
 
         </LinearLayout>
 
+
     <LinearLayout
-        android:orientation="horizontal"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content" >
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
 
-
-        <TextView
-            android:layout_width="wrap_content"
+        <LinearLayout
+            android:orientation="horizontal"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:id="@+id/newTaskDueDateLabel"
-            android:text="Due Date: " />
+            android:layout_weight="1">
 
-        <TextView
-            android:layout_width="wrap_content"
+
+            <Button
+                android:id="@+id/newTaskDatePickerBtn"
+                android:layout_width="30dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Set Due Date"
+                android:textSize="8sp"/>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:id="@+id/newTaskDateValue" />
+
+            <Button
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:id="@+id/clearDateBtn"
+                android:background="@android:drawable/ic_menu_close_clear_cancel"/>
+
+        </LinearLayout>
+        <LinearLayout
+            android:orientation="horizontal"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:id="@+id/newTaskDateValue" />
+            android:layout_weight="1">
+
+            <Button
+                android:layout_width="30dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:id="@+id/newTaskTimePickerBtn"
+                android:text="Set Time"
+                android:textSize="8sp"/>
 
 
-        <Button
-            android:id="@+id/newTaskDatePickerBtn"
-            android:layout_width="50dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="Set Date"
-            android:textSize="12sp"/>
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="3"
+                android:id="@+id/newTaskTimeValue" />
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_weight="3"
-            android:id="@+id/newTaskTimeValue" />
+            <Button
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:maxWidth="20dp"
+                android:maxHeight="20dp"
+                android:id="@+id/clearTimeBtn"
+                android:background="@android:drawable/ic_menu_close_clear_cancel"/>
 
-        <Button
-            android:layout_width="50dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:id="@+id/newTaskTimePickerBtn"
-            android:text="Set Time"
-            android:textSize="12sp"/>
+
+
+
+        </LinearLayout>
 
     </LinearLayout>
 

@@ -25,7 +25,10 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:id="@+id/taskRecyclerView"
-        android:layout_below="@+id/new_task_button"/>
+        android:layout_below="@+id/new_task_button"
+        android:layout_margin="5dp"
+        android:scrollbars="vertical"/>
+
 
 
 </RelativeLayout>

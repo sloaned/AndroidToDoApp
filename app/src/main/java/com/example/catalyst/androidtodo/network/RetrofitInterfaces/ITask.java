@@ -22,7 +22,7 @@ public interface ITask {
     @DELETE("task/{id}")
     Call<ResponseBody> deleteTask(@Path("id") int id);
 
-    @PUT("task")
+    @POST("editTask")
     Call<ResponseBody> editTask(@Body Task task);
 
     @POST("task")

@@ -1,37 +1,29 @@
 package com.example.catalyst.androidtodo.activities;
 
-import android.accounts.Account;
 import android.accounts.AccountManager;
 import android.accounts.AccountManagerCallback;
 import android.accounts.AccountManagerFuture;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.os.Parcelable;
 import android.preference.PreferenceManager;
-import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
 import android.support.v4.app.DialogFragment;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
-import android.support.v7.widget.helper.ItemTouchHelper;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 
-import com.daimajia.swipe.SwipeLayout;
 import com.example.catalyst.androidtodo.R;
 import com.example.catalyst.androidtodo.adapters.TaskAdapter;
-import com.example.catalyst.androidtodo.fragments.AddTaskFragment;
+import com.example.catalyst.androidtodo.fragments.TaskFragment;
+import com.example.catalyst.androidtodo.fragments.DividerItemDecoration;
 import com.example.catalyst.androidtodo.models.Task;
-import com.example.catalyst.androidtodo.network.ApiCaller;
-import com.example.catalyst.androidtodo.network.RetrofitInterfaces.ILoginUser;
 import com.example.catalyst.androidtodo.network.RetrofitInterfaces.ITask;
-import com.example.catalyst.androidtodo.network.entities.LoginUser;
 import com.example.catalyst.androidtodo.util.JSONConstants;
 import com.example.catalyst.androidtodo.util.SharedPreferencesConstants;
 import com.google.gson.Gson;
@@ -50,14 +42,12 @@ import okhttp3.Interceptor;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.ResponseBody;
-import okhttp3.logging.HttpLoggingInterceptor;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
-import retrofit2.http.Body;
 
-public class HomeActivity extends AppCompatActivity implements AccountManagerCallback<Bundle>, AddTaskFragment.getAllMethods {
+public class HomeActivity extends AppCompatActivity implements AccountManagerCallback<Bundle>, TaskFragment.getAllMethods {
 
     private final String TAG = getClass().getSimpleName();
     private AccountManager accountManager;
@@ -104,13 +94,20 @@ public class HomeActivity extends AppCompatActivity implements AccountManagerCal
         RecyclerView.LayoutManager layoutManager = new LinearLayoutManager(this);
         mTaskListView.setLayoutManager(layoutManager);
 
+        mTaskListView.addItemDecoration(new DividerItemDecoration(this, DividerItemDecoration.VERTICAL_LIST));
+
         mTaskListView.setHasFixedSize(true);
 
 
         newTaskButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                onClickNewTask();
+                DialogFragment dialog = TaskFragment.newInstance(null);
+                if (dialog.getDialog() != null) {
+                    dialog.getDialog().setCanceledOnTouchOutside(false);
+                }
+                dialog.show(HomeActivity.this.getSupportFragmentManager(), "dialog");
+                getAllTasks();
             }
         });
 
@@ -128,7 +125,6 @@ public class HomeActivity extends AppCompatActivity implements AccountManagerCal
         mTaskListView.setAdapter(adapter);
         getAllTasks();
 
-        //mTaskListView.invalidate();
         super.onResume();
 
     }
@@ -278,15 +274,6 @@ public class HomeActivity extends AppCompatActivity implements AccountManagerCal
         }).build();
     }
 
-    public void onClickNewTask() {
-        DialogFragment dialog = AddTaskFragment.newInstance();
-        if (dialog.getDialog() != null) {
-            dialog.getDialog().setCanceledOnTouchOutside(false);
-        }
-        dialog.show(this.getSupportFragmentManager(), "dialog");
-        getAllTasks();
-    }
-
     public void deleteTask(final int id) {
         //mTasks.clear();
         client = assignInterceptorWithToken();
@@ -328,6 +315,16 @@ public class HomeActivity extends AppCompatActivity implements AccountManagerCal
             }
         }
         return -1;
+    }
+
+
+    public void showTask(Task task) {
+        DialogFragment dialog = TaskFragment.newInstance(task);
+        if (dialog.getDialog() != null) {
+            dialog.getDialog().setCanceledOnTouchOutside(false);
+        }
+        dialog.show(this.getSupportFragmentManager(), "dialog");
+        getAllTasks();
     }
 
 

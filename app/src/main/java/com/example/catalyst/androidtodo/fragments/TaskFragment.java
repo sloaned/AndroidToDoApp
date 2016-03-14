@@ -6,7 +6,6 @@ import android.app.Dialog;
 import android.app.TimePickerDialog;
 import android.content.Context;
 import android.content.DialogInterface;
-import android.content.Intent;
 import android.content.SharedPreferences;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
@@ -24,13 +23,10 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.TimePicker;
 
-import com.example.catalyst.androidtodo.BuildConfig;
 import com.example.catalyst.androidtodo.R;
 import com.example.catalyst.androidtodo.activities.HomeActivity;
 import com.example.catalyst.androidtodo.models.Task;
-import com.example.catalyst.androidtodo.network.RetrofitInterfaces.ILoginUser;
 import com.example.catalyst.androidtodo.network.RetrofitInterfaces.ITask;
-import com.example.catalyst.androidtodo.network.RetrofitInterfaces.IUsers;
 import com.example.catalyst.androidtodo.util.SharedPreferencesConstants;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -46,7 +42,6 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.TimeZone;
 
-import butterknife.Bind;
 import butterknife.ButterKnife;
 import okhttp3.Interceptor;
 import okhttp3.OkHttpClient;
@@ -61,13 +56,13 @@ import retrofit2.converter.gson.GsonConverterFactory;
 /**
  * Created by dsloane on 3/8/2016.
  */
-public class AddTaskFragment extends DialogFragment {
+public class TaskFragment extends DialogFragment {
 
-    public static final String TAG = AddTaskFragment.class.getSimpleName();
+    public static final String TAG = TaskFragment.class.getSimpleName();
 
     private static final String BASE_URL = "http://pc30120.catalystsolves.com:8080/";
 
-    private Task task = new Task();
+    private static Task task;
     private long dateInMilliseconds = 0;
     private long timeInMilliseconds = 0;
 
@@ -84,11 +79,19 @@ public class AddTaskFragment extends DialogFragment {
 
     private View addTaskView;
 
-    public AddTaskFragment() {}
+    private EditText taskTitleView;
+    private EditText taskDetailView;
+    private EditText taskLocationView;
+    private TextView dateView;
+    private TextView timeView;
+
+    private boolean editing = false;
+
+    public TaskFragment() {}
 
     public interface getAllMethods {
 
-        public void updateList();
+        void updateList();
     }
 
 
@@ -101,6 +104,43 @@ public class AddTaskFragment extends DialogFragment {
 
 
         addTaskView = inflater.inflate(R.layout.add_new_task, null);
+
+
+        taskTitleView = (EditText) addTaskView.findViewById(R.id.newTaskTitleValue);
+        taskDetailView = (EditText)  addTaskView.findViewById(R.id.newTaskDetailsValue);
+        taskLocationView = (EditText) addTaskView.findViewById(R.id.newTaskLocationValue);
+        dateView = (TextView) addTaskView.findViewById(R.id.newTaskDateValue);
+        timeView = (TextView) addTaskView.findViewById(R.id.newTaskTimeValue);
+
+        if (task.getTaskTitle() != null && !task.getTaskTitle().equals(null) && !task.getTaskTitle().equals("")) {
+            editing = true;
+            taskTitleView.setText(task.getTaskTitle());
+            if (task.getTaskDetails() != null && !task.getTaskDetails().equals(null) && !task.getTaskDetails().equals("")) {
+                taskDetailView.setText(task.getTaskDetails());
+            }
+            if (task.getLocationName() != null && !task.getLocationName().equals(null) && !task.getLocationName().equals("")) {
+                taskLocationView.setText(task.getLocationName());
+            }
+            if (task.getDueDate() != null && !task.getDueDate().equals(null) && !task.getDueDate().equals("")) {
+                long milliseconds = Long.valueOf(task.getDueDate());
+                SimpleDateFormat dt = new SimpleDateFormat("EEE MMM dd hh:mm:ss z yyyy");
+                SimpleDateFormat dateFormat = new SimpleDateFormat("MM/dd/yyyy");
+                SimpleDateFormat timeFormat = new SimpleDateFormat("h:mm aaa");
+
+                Date date = new Date(milliseconds);
+
+                String dateString = date.toString();
+                try {
+                    date = dt.parse(dateString);
+                } catch (ParseException e) {
+                    Log.e(TAG, "date parsing error: " + e.getMessage());
+                }
+                String theDate = dateFormat.format(date);
+                String theTime = timeFormat.format(date);
+                dateView.setText(theDate);
+                timeView.setText(theTime);
+            }
+        }
 
         Button datePickerButton = (Button) addTaskView.findViewById(R.id.newTaskDatePickerBtn);
         datePickerButton.setOnClickListener(new View.OnClickListener() {
@@ -118,8 +158,6 @@ public class AddTaskFragment extends DialogFragment {
                         String dateString = String.valueOf(monthOfYear+1) + "/" + String.valueOf(dayOfMonth)
                                 + "/" + String.valueOf(year);
 
-
-                        TextView dateView = (TextView) addTaskView.findViewById(R.id.newTaskDateValue);
                         dateView.setText(dateString);
 
                         SimpleDateFormat formatter = new SimpleDateFormat("MM/dd/yyyy");
@@ -176,7 +214,7 @@ public class AddTaskFragment extends DialogFragment {
                             time += "0";
                         }
                         time += String.valueOf(minute) + " " + meridiem;
-                        TextView timeView = (TextView) addTaskView.findViewById(R.id.newTaskTimeValue);
+
                         timeView.setText(time);
                     }
                 }, hh, mm, false);
@@ -190,28 +228,18 @@ public class AddTaskFragment extends DialogFragment {
             @Override
             public void onClick(DialogInterface dialog, int which) {
 
-
-                EditText taskTitleView = (EditText) addTaskView.findViewById(R.id.newTaskTitleValue);
                 String taskTitle = taskTitleView.getText().toString();
-                EditText taskDetailView = (EditText)  addTaskView.findViewById(R.id.newTaskDetailsValue);
                 String taskDetails = taskDetailView.getText().toString();
-                //EditText taskDueDateView = (EditText) addTaskView.findViewById(R.id.newTaskDueDateValue);
-               // String taskDueDate = taskDueDateView.getText().toString();
-                EditText taskLocationView = (EditText) addTaskView.findViewById(R.id.newTaskLocationValue);
                 String taskLocation = taskLocationView.getText().toString();
-
 
                 if (taskTitle != null && !taskTitle.equals((String) null) && !taskTitle.equals("")) {
 
-                    //task = new Task();
                     task.setTaskTitle(taskTitle);
                     task.setTaskDetails(taskDetails);
-                    //task.setDueDate(taskDueDate);
                     task.setLocationName(taskLocation);
 
                     String taskLocationCoordinates = "";
 
-                    //addTaskToDatabase();
                     String tz = TimeZone.getDefault().getID();
 
                     Log.d(TAG, "The timezone id is " + tz);
@@ -221,8 +249,10 @@ public class AddTaskFragment extends DialogFragment {
 
                     if (taskLocation != null && !taskLocation.equals("")) {
                         getLocationCoordinates(taskLocation);
-                    } else {
+                    } else if (!editing){
                         addTaskToDatabase();
+                    } else {
+                        updateTask();
                     }
 
                 }
@@ -241,10 +271,16 @@ public class AddTaskFragment extends DialogFragment {
 
     }
 
-    public static AddTaskFragment newInstance() {
+    public static TaskFragment newInstance(Task savedTask) {
+
+        if (savedTask == null) {
+            task = new Task();
+        } else {
+            task = savedTask;
+        }
 
         Log.d(TAG, "trying to make a new instance here");
-        AddTaskFragment fragment = new AddTaskFragment();
+        TaskFragment fragment = new TaskFragment();
         Bundle args = new Bundle();
 
         fragment.setArguments(args);
@@ -281,6 +317,7 @@ public class AddTaskFragment extends DialogFragment {
         Log.d(TAG, "url = " + GOOGLE_MAPS_URL);
 
         if (isNetworkAvailable() ) {
+            Log.d(TAG, "editing? " + editing);
             OkHttpClient okHttpClient = new OkHttpClient();
             okhttp3.Request request = new Request.Builder()
                     .url(GOOGLE_MAPS_URL)
@@ -290,7 +327,12 @@ public class AddTaskFragment extends DialogFragment {
                 @Override
                 public void onFailure(okhttp3.Call call, IOException e) {
                     Log.e(TAG, e.getMessage());
-                    addTaskToDatabase();
+                    if (!editing) {
+                        addTaskToDatabase();
+                    } else {
+                        updateTask();
+                    }
+
                 }
 
                 @Override
@@ -311,10 +353,14 @@ public class AddTaskFragment extends DialogFragment {
                                     String longitude = location.getString("lng");
                                     task.setLatitude(location.getDouble("lat"));
                                     task.setLongitude(location.getDouble("lng"));
+
                                     if (task.getDueDate() != null && !task.getDueDate().equals("")) {
                                         getLocationTimezone(latitude, longitude);
-                                    } else {
+                                    } else if (!editing) {
                                         addTaskToDatabase();
+                                    } else {
+                                        Log.d(TAG, "editing the task");
+                                        updateTask();
                                     }
 
                                 }
@@ -331,8 +377,10 @@ public class AddTaskFragment extends DialogFragment {
                 }
             });
 
-        } else {
+        } else if (!editing) {
             addTaskToDatabase();
+        } else {
+            updateTask();
         }
 
 
@@ -373,18 +421,64 @@ public class AddTaskFragment extends DialogFragment {
                             String timeZoneId = results.getString("timeZoneId");
                             task.setTimeZone(timeZoneId);
                         }
-                        addTaskToDatabase();
+                        if (!editing) {
+                            addTaskToDatabase();
+                        } else {
+                            Log.d(TAG, "updating the task");
+                            updateTask();
+                        }
+
 
                     } catch (IOException e) {
                         Log.e(TAG, "Error getting data: " + e.getMessage());
-                        addTaskToDatabase();
+
+                        if (!editing) {
+                            addTaskToDatabase();
+                        } else {
+                            Log.d(TAG, "updating the task");
+                            updateTask();
+                        }
                     } catch (JSONException e) {
                         Log.e(TAG, e.getMessage());
-                        addTaskToDatabase();
+                        if (!editing) {
+                            addTaskToDatabase();
+                        } else {
+                            Log.d(TAG, "updating the task");
+                            updateTask();
+                        }
                     }
                 }
             });
         }
+    }
+
+    public void updateTask() {
+        client = assignInterceptorWithToken();
+        retrofit = new Retrofit.Builder()
+                .baseUrl(BASE_URL)
+                .addConverterFactory(GsonConverterFactory.create(gson))
+                .client(client)
+                .build();
+        apiCaller = retrofit.create(ITask.class);
+
+        Log.d(TAG, "The id of the task = " + task.getId());
+
+        Call<ResponseBody> addTask = apiCaller.editTask(task);
+
+        addTask.enqueue(new Callback<ResponseBody>() {
+            @Override
+            public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
+                Log.v(TAG, "Success editing!");
+                if (context instanceof HomeActivity) {
+                    ((HomeActivity) context).updateList();
+                }
+            }
+
+            @Override
+            public void onFailure(Call<ResponseBody> call, Throwable t) {
+                Log.e(TAG, "Failure updating!");
+            }
+        });
     }
 
 
@@ -396,8 +490,6 @@ public class AddTaskFragment extends DialogFragment {
                 .client(client)
                 .build();
         apiCaller = retrofit.create(ITask.class);
-
-
 
         Call<ResponseBody> addTask = apiCaller.createTask(task);
 

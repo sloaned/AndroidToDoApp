@@ -88,6 +88,10 @@ public class TaskAdapter extends RecyclerSwipeAdapter<TaskAdapter.TaskViewHolder
                 String taskName = holder.mTaskNameText.getText().toString();
 
                 Toast.makeText(mContext, taskName, Toast.LENGTH_SHORT).show();
+
+                if (mContext instanceof HomeActivity) {
+                    ((HomeActivity) mContext).showTask(holder.mTask);
+                }
             }
         });
 
@@ -110,6 +114,7 @@ public class TaskAdapter extends RecyclerSwipeAdapter<TaskAdapter.TaskViewHolder
         public TextView mTaskDueDateText;
         public TextView mTaskLocation;
         public ImageButton mTaskDeleteBtn;
+        public Task mTask;
 
         public TaskViewHolder(View itemView) {
             super(itemView);
@@ -126,23 +131,34 @@ public class TaskAdapter extends RecyclerSwipeAdapter<TaskAdapter.TaskViewHolder
         }
 
         public void bindTask(final Task task) {
+            mTask = task;
             mTaskNameText.setText(task.getTaskTitle());
-            long milliseconds = Long.valueOf(task.getDueDate());
-            SimpleDateFormat dt = new SimpleDateFormat("EEE MMM dd hh:mm:ss z yyyy");
-            SimpleDateFormat dt1 = new SimpleDateFormat("EEE, MM/dd/yyyy 'at' h:mm aaa");
 
-            Date date = new Date(milliseconds);
-            String dateString = date.toString();
-            try {
-                date = dt.parse(dateString);
-            } catch (ParseException e) {
-                Log.e(TAG, "date parsing error: " + e.getMessage());
+            if (task.getDueDate() != null && !task.getDueDate().equals(null) && !task.getDueDate().equals("")) {
+                long milliseconds = Long.valueOf(task.getDueDate());
+                SimpleDateFormat dt = new SimpleDateFormat("EEE MMM dd hh:mm:ss z yyyy");
+                SimpleDateFormat dt1 = new SimpleDateFormat("EEE, MM/dd/yyyy 'at' h:mm aaa");
+
+                Date date = new Date(milliseconds);
+                String dateString = date.toString();
+                try {
+                    date = dt.parse(dateString);
+                } catch (ParseException e) {
+                    Log.e(TAG, "date parsing error: " + e.getMessage());
+                }
+                Log.d(TAG, "date = " + date);
+                dateString = dt1.format(date);
+                mTaskDueDateText.setText(dateString);
             }
-            Log.d(TAG, "date = " + date);
-            dateString = dt1.format(date);
-            mTaskDetailsText.setText(task.getTaskDetails());
-            mTaskDueDateText.setText(dateString);
-            mTaskLocation.setText(task.getLocationName());
+
+            if (task.getTaskDetails() != null && !task.getTaskDetails().equals(null) && !task.getTaskDetails().equals("")) {
+                mTaskDetailsText.setText(task.getTaskDetails());
+            }
+
+            if (task.getLocationName() != null && !task.getLocationName().equals(null) && !task.getLocationName().equals("")) {
+                mTaskLocation.setText(task.getLocationName());
+            }
+
             mTaskDeleteBtn.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
