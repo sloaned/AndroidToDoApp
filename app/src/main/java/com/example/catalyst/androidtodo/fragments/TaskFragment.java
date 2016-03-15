@@ -42,6 +42,7 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.TimeZone;
 
+import butterknife.Bind;
 import butterknife.ButterKnife;
 import okhttp3.Interceptor;
 import okhttp3.OkHttpClient;
@@ -84,6 +85,10 @@ public class TaskFragment extends DialogFragment {
     private EditText taskLocationView;
     private TextView dateView;
     private TextView timeView;
+    private Button datePickerButton;
+    private Button timePickerButton;
+    private Button clearTimeButton;
+    private Button clearDateButton;
 
     private boolean editing = false;
 
@@ -111,6 +116,16 @@ public class TaskFragment extends DialogFragment {
         taskLocationView = (EditText) addTaskView.findViewById(R.id.newTaskLocationValue);
         dateView = (TextView) addTaskView.findViewById(R.id.newTaskDateValue);
         timeView = (TextView) addTaskView.findViewById(R.id.newTaskTimeValue);
+        datePickerButton = (Button) addTaskView.findViewById(R.id.newTaskDatePickerBtn);
+        timePickerButton = (Button) addTaskView.findViewById(R.id.newTaskTimePickerBtn);
+        clearDateButton = (Button) addTaskView.findViewById(R.id.clearDateButton);
+        clearTimeButton = (Button) addTaskView.findViewById(R.id.clearTimeButton);
+
+        //ButterKnife.bind(getActivity());
+
+        clearDateButton.setVisibility(View.INVISIBLE);
+        clearTimeButton.setVisibility(View.INVISIBLE);
+
 
         if (task.getTaskTitle() != null && !task.getTaskTitle().equals(null) && !task.getTaskTitle().equals("")) {
             editing = true;
@@ -138,11 +153,13 @@ public class TaskFragment extends DialogFragment {
                 String theDate = dateFormat.format(date);
                 String theTime = timeFormat.format(date);
                 dateView.setText(theDate);
+                clearDateButton.setVisibility(View.VISIBLE);
                 timeView.setText(theTime);
+                clearTimeButton.setVisibility(View.VISIBLE);
             }
         }
 
-        Button datePickerButton = (Button) addTaskView.findViewById(R.id.newTaskDatePickerBtn);
+       // Button datePickerButton = (Button) addTaskView.findViewById(R.id.newTaskDatePickerBtn);
         datePickerButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -159,6 +176,7 @@ public class TaskFragment extends DialogFragment {
                                 + "/" + String.valueOf(year);
 
                         dateView.setText(dateString);
+                        clearDateButton.setVisibility(View.VISIBLE);
 
                         SimpleDateFormat formatter = new SimpleDateFormat("MM/dd/yyyy");
                         try {
@@ -173,7 +191,7 @@ public class TaskFragment extends DialogFragment {
                 datePicker.show();
             }
         });
-        Button timePickerButton = (Button) addTaskView.findViewById(R.id.newTaskTimePickerBtn);
+        //Button timePickerButton = (Button) addTaskView.findViewById(R.id.newTaskTimePickerBtn);
         timePickerButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -186,6 +204,7 @@ public class TaskFragment extends DialogFragment {
                     public void onTimeSet(TimePicker view, int hour, int minute) {
                         long milliSeconds = (hour * 3600 * 1000) + (minute * 60 * 1000);
                         timeInMilliseconds = milliSeconds;
+                      /*
                         if (dateInMilliseconds == 0) {
                             Date date = new Date();
                             long milliseconds = date.getTime();
@@ -196,7 +215,7 @@ public class TaskFragment extends DialogFragment {
                             long milliseconds = dateInMilliseconds + timeInMilliseconds;
 
                             task.setDueDate(String.valueOf(milliseconds));
-                        }
+                        }   */
                         Log.d(TAG, "time in milliseconds = " + timeInMilliseconds);
 
                         String meridiem = "AM";
@@ -216,9 +235,28 @@ public class TaskFragment extends DialogFragment {
                         time += String.valueOf(minute) + " " + meridiem;
 
                         timeView.setText(time);
+                        clearTimeButton.setVisibility(View.VISIBLE);
                     }
                 }, hh, mm, false);
                 timePicker.show();
+            }
+        });
+
+        clearDateButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                dateInMilliseconds = 0;
+                dateView.setText("");
+                clearDateButton.setVisibility(View.INVISIBLE);
+            }
+        });
+
+        clearTimeButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                timeInMilliseconds = 0;
+                timeView.setText("");
+                clearTimeButton.setVisibility(View.INVISIBLE);
             }
         });
 
@@ -238,6 +276,23 @@ public class TaskFragment extends DialogFragment {
                     task.setTaskDetails(taskDetails);
                     task.setLocationName(taskLocation);
 
+                    if (dateInMilliseconds != 0 || timeInMilliseconds != 0) {
+
+                        long milliseconds = 0;
+
+                        if (dateInMilliseconds == 0) {
+                            Date date = new Date();
+                            milliseconds = date.getTime();
+                            milliseconds += timeInMilliseconds;
+                        } else if (timeInMilliseconds == 0) {
+                            milliseconds = dateInMilliseconds + 86370000;
+                        } else {
+                            milliseconds = dateInMilliseconds + timeInMilliseconds;
+                        }
+
+                        task.setDueDate(String.valueOf(milliseconds));
+                    }
+
                     String taskLocationCoordinates = "";
 
                     String tz = TimeZone.getDefault().getID();
@@ -249,7 +304,7 @@ public class TaskFragment extends DialogFragment {
 
                     if (taskLocation != null && !taskLocation.equals("")) {
                         getLocationCoordinates(taskLocation);
-                    } else if (!editing){
+                    } else if (!editing) {
                         addTaskToDatabase();
                     } else {
                         updateTask();
