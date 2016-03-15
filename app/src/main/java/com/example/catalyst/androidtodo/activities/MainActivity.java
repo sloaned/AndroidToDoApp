@@ -58,12 +58,11 @@ public class MainActivity extends AppCompatActivity {
         } else {
 
             Log.d(TAG, "Logged in");
+            SQLiteDatabase taskDatabase = openOrCreateDatabase(TaskContract.DATABASE_NAME, MODE_PRIVATE, null);
             Intent intent = new Intent(this, HomeActivity.class);
             startActivity(intent);
         }
-
-        //new ApiCaller(this).loginUserAndGetToken();
-
+        
     }
 
     private boolean doesTokenExist() {

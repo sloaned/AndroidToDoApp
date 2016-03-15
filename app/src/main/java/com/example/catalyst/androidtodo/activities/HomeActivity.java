@@ -176,6 +176,7 @@ public class HomeActivity extends AppCompatActivity implements AccountManagerCal
 
     public void getAllTasks() {
         mTasks.clear();
+        adapter.notifyDataSetChanged();
         client = assignInterceptorWithToken();
         retrofit = new Retrofit.Builder()
                 .baseUrl(BASE_URL)
@@ -227,6 +228,13 @@ public class HomeActivity extends AppCompatActivity implements AccountManagerCal
                             mTasks.add(task);
                         }
 
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                adapter.notifyDataSetChanged();
+                            }
+                        });
+
 
                     } catch (JSONException e) {
                         e.printStackTrace();
@@ -238,14 +246,6 @@ public class HomeActivity extends AppCompatActivity implements AccountManagerCal
                 for (String head : response.headers().names()) {
                     Log.v(TAG, head + " " + response.headers().values(head));
                 }
-
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        adapter.notifyDataSetChanged();
-                    }
-                });
-
 
             }
 

@@ -19,7 +19,7 @@ public class Task {
     @SerializedName("dueDate")
     private String dueDate;
 
-    private List<User> users;
+    private List<Participant> participants;
 
     private String locationName;
 
@@ -92,12 +92,12 @@ public class Task {
         this.timeZone = timeZone;
     }
 
-    public List<User> getUsers() {
-        return users;
+    public List<Participant> getParticipants() {
+        return participants;
     }
 
-    public void setUsers(List<User> users) {
-        this.users = users;
+    public void setParticipants(List<Participant> participants) {
+        this.participants = participants;
     }
 
 

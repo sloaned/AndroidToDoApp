@@ -7,7 +7,6 @@ import android.preference.PreferenceManager;
 import android.util.Log;
 
 import com.example.catalyst.androidtodo.activities.MainActivity;
-import com.example.catalyst.androidtodo.models.ImageUpload;
 import com.example.catalyst.androidtodo.models.Task;
 import com.example.catalyst.androidtodo.models.User;
 import com.example.catalyst.androidtodo.network.RetrofitInterfaces.ILoginUser;
@@ -19,16 +18,12 @@ import com.example.catalyst.androidtodo.util.SharedPreferencesConstants;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
-import org.json.JSONObject;
-
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 
 import okhttp3.Interceptor;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
-import okhttp3.Response;
 import okhttp3.ResponseBody;
 import okhttp3.logging.HttpLoggingInterceptor;
 import retrofit2.Call;

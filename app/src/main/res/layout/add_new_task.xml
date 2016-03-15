@@ -146,7 +146,13 @@
                 android:background="@android:color/transparent"
                 android:textSize="14sp"/>
 
-            </LinearLayout>
+            <Button
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:id="@+id/clearLocationButton"
+                android:background="@drawable/clearx"/>
+
+        </LinearLayout>
 
 
     </LinearLayout>

@@ -89,6 +89,7 @@ public class TaskFragment extends DialogFragment {
     private Button timePickerButton;
     private Button clearTimeButton;
     private Button clearDateButton;
+    private Button clearLocationButton;
 
     private boolean editing = false;
 
@@ -120,12 +121,13 @@ public class TaskFragment extends DialogFragment {
         timePickerButton = (Button) addTaskView.findViewById(R.id.newTaskTimePickerBtn);
         clearDateButton = (Button) addTaskView.findViewById(R.id.clearDateButton);
         clearTimeButton = (Button) addTaskView.findViewById(R.id.clearTimeButton);
+        clearLocationButton = (Button) addTaskView.findViewById(R.id.clearLocationButton);
 
         //ButterKnife.bind(getActivity());
 
         clearDateButton.setVisibility(View.INVISIBLE);
         clearTimeButton.setVisibility(View.INVISIBLE);
-
+        clearLocationButton.setVisibility(View.INVISIBLE);
 
         if (task.getTaskTitle() != null && !task.getTaskTitle().equals(null) && !task.getTaskTitle().equals("")) {
             editing = true;
@@ -135,6 +137,7 @@ public class TaskFragment extends DialogFragment {
             }
             if (task.getLocationName() != null && !task.getLocationName().equals(null) && !task.getLocationName().equals("")) {
                 taskLocationView.setText(task.getLocationName());
+                clearLocationButton.setVisibility(View.VISIBLE);
             }
             if (task.getDueDate() != null && !task.getDueDate().equals(null) && !task.getDueDate().equals("")) {
                 long milliseconds = Long.valueOf(task.getDueDate());
@@ -158,6 +161,15 @@ public class TaskFragment extends DialogFragment {
                 clearTimeButton.setVisibility(View.VISIBLE);
             }
         }
+
+        taskLocationView.setOnFocusChangeListener(new View.OnFocusChangeListener() {
+            @Override
+            public void onFocusChange(View v, boolean hasFocus) {
+                if (!hasFocus && (!taskLocationView.getText().toString().equals(""))) {
+                    clearLocationButton.setVisibility(View.VISIBLE);
+                }
+            }
+        });
 
        // Button datePickerButton = (Button) addTaskView.findViewById(R.id.newTaskDatePickerBtn);
         datePickerButton.setOnClickListener(new View.OnClickListener() {
@@ -257,6 +269,14 @@ public class TaskFragment extends DialogFragment {
                 timeInMilliseconds = 0;
                 timeView.setText("");
                 clearTimeButton.setVisibility(View.INVISIBLE);
+            }
+        });
+
+        clearLocationButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                taskLocationView.setText("");
+                clearLocationButton.setVisibility(View.INVISIBLE);
             }
         });
 
@@ -421,8 +441,11 @@ public class TaskFragment extends DialogFragment {
                                 }
 
 
+                            } else if (!editing) {
+                            addTaskToDatabase();
+                            } else {
+                                updateTask();
                             }
-
                         }
                     } catch (IOException e) {
                         Log.e(TAG, "Exception caught: ", e);
