@@ -25,6 +25,7 @@ import android.widget.TimePicker;
 
 import com.example.catalyst.androidtodo.R;
 import com.example.catalyst.androidtodo.activities.HomeActivity;
+import com.example.catalyst.androidtodo.models.Participant;
 import com.example.catalyst.androidtodo.models.Task;
 import com.example.catalyst.androidtodo.network.RetrofitInterfaces.ITask;
 import com.example.catalyst.androidtodo.util.SharedPreferencesConstants;
@@ -38,8 +39,10 @@ import org.json.JSONObject;
 import java.io.IOException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.List;
 import java.util.TimeZone;
 
 import butterknife.Bind;
@@ -90,6 +93,7 @@ public class TaskFragment extends DialogFragment {
     private Button clearTimeButton;
     private Button clearDateButton;
     private Button clearLocationButton;
+    private EditText taskParticipantView;
 
     private boolean editing = false;
 
@@ -122,6 +126,7 @@ public class TaskFragment extends DialogFragment {
         clearDateButton = (Button) addTaskView.findViewById(R.id.clearDateButton);
         clearTimeButton = (Button) addTaskView.findViewById(R.id.clearTimeButton);
         clearLocationButton = (Button) addTaskView.findViewById(R.id.clearLocationButton);
+        taskParticipantView = (EditText) addTaskView.findViewById(R.id.newTaskParticipantsValue);
 
         //ButterKnife.bind(getActivity());
 
@@ -289,12 +294,21 @@ public class TaskFragment extends DialogFragment {
                 String taskTitle = taskTitleView.getText().toString();
                 String taskDetails = taskDetailView.getText().toString();
                 String taskLocation = taskLocationView.getText().toString();
+                String taskParticipant = taskParticipantView.getText().toString();
 
                 if (taskTitle != null && !taskTitle.equals((String) null) && !taskTitle.equals("")) {
 
                     task.setTaskTitle(taskTitle);
                     task.setTaskDetails(taskDetails);
                     task.setLocationName(taskLocation);
+                    if (!taskParticipant.equals(null) && !taskParticipant.equals("")) {
+                        Participant participant = new Participant();
+                        participant.setParticipantName(taskParticipant);
+                        List<Participant> participants = new ArrayList<Participant>();
+                        participants.add(participant);
+                        task.setParticipants(participants);
+                    }
+
 
                     if (dateInMilliseconds != 0 || timeInMilliseconds != 0) {
 
