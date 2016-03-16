@@ -9,8 +9,7 @@ public class Participant {
 
     @SerializedName("id")
     private int id;
-
-    @SerializedName("name")
+    
     private String participantName;
 
     public int getId() {
