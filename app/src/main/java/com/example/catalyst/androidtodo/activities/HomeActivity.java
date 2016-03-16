@@ -22,6 +22,7 @@ import com.example.catalyst.androidtodo.R;
 import com.example.catalyst.androidtodo.adapters.TaskAdapter;
 import com.example.catalyst.androidtodo.fragments.TaskFragment;
 import com.example.catalyst.androidtodo.fragments.DividerItemDecoration;
+import com.example.catalyst.androidtodo.models.Participant;
 import com.example.catalyst.androidtodo.models.Task;
 import com.example.catalyst.androidtodo.network.RetrofitInterfaces.ITask;
 import com.example.catalyst.androidtodo.util.JSONConstants;
@@ -35,6 +36,7 @@ import org.json.JSONObject;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.List;
 
 import butterknife.Bind;
 import butterknife.ButterKnife;
@@ -223,6 +225,18 @@ public class HomeActivity extends AppCompatActivity implements AccountManagerCal
                             }
                             if (!jsonTask.isNull(JSONConstants.JSON_TASK_TIMEZONE)) {
                                 task.setTimeZone(jsonTask.getString(JSONConstants.JSON_TASK_TIMEZONE));
+                            }
+                            if (!jsonTask.isNull(JSONConstants.JSON_TASK_PARTICIPANTS)) {
+                                JSONArray participantsArray = jsonTask.getJSONArray(JSONConstants.JSON_TASK_PARTICIPANTS);
+                                List<Participant> participants = new ArrayList<Participant>();
+                                for (int j = 0; j < participantsArray.length(); j++) {
+                                    JSONObject participantObj = participantsArray.getJSONObject(j);
+                                    String name = participantObj.getString(JSONConstants.JSON_TASK_PARTICIPANT_NAME);
+                                    Participant participant = new Participant();
+                                    participant.setParticipantName(name);
+                                    participants.add(participant);
+                                }
+                                task.setParticipants(participants);
                             }
 
                             mTasks.add(task);

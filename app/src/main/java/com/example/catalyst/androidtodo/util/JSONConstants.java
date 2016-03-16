@@ -13,4 +13,6 @@ public class JSONConstants {
     public final static String JSON_TASK_LOCATION = "locationName";
     public final static String JSON_TASK_TIMEZONE = "timeZone";
     public final static String JSON_TASK_ID = "id";
+    public final static String JSON_TASK_PARTICIPANTS = "participants";
+    public final static String JSON_TASK_PARTICIPANT_NAME = "participantName";
 }

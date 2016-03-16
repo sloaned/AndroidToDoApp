@@ -1,5 +1,6 @@
 package com.example.catalyst.androidtodo.fragments;
 
+import android.app.ActionBar;
 import android.app.AlertDialog;
 import android.app.DatePickerDialog;
 import android.app.Dialog;
@@ -15,11 +16,14 @@ import android.preference.PreferenceManager;
 import android.support.v4.app.DialogFragment;
 
 import android.util.Log;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.DatePicker;
 import android.widget.EditText;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.TimePicker;
 
@@ -93,9 +97,11 @@ public class TaskFragment extends DialogFragment {
     private Button clearTimeButton;
     private Button clearDateButton;
     private Button clearLocationButton;
-    private EditText taskParticipantView;
+    private Button addParticipantButton;
+    private LinearLayout taskParticipantLayout;
 
     private boolean editing = false;
+    private int participantNumber = 0;
 
     public TaskFragment() {}
 
@@ -126,7 +132,9 @@ public class TaskFragment extends DialogFragment {
         clearDateButton = (Button) addTaskView.findViewById(R.id.clearDateButton);
         clearTimeButton = (Button) addTaskView.findViewById(R.id.clearTimeButton);
         clearLocationButton = (Button) addTaskView.findViewById(R.id.clearLocationButton);
-        taskParticipantView = (EditText) addTaskView.findViewById(R.id.newTaskParticipantsValue);
+       // taskParticipantView = (EditText) addTaskView.findViewById(R.id.newTaskParticipantsValue);
+        taskParticipantLayout = (LinearLayout) addTaskView.findViewById(R.id.newTaskParticipantsLayout);
+        addParticipantButton = (Button) addTaskView.findViewById(R.id.newTaskParticipantButton);
 
         //ButterKnife.bind(getActivity());
 
@@ -165,6 +173,13 @@ public class TaskFragment extends DialogFragment {
                 timeView.setText(theTime);
                 clearTimeButton.setVisibility(View.VISIBLE);
             }
+            if (task.getParticipants().size() > 0) {
+
+                for (int i = 0; i < task.getParticipants().size(); i++) {
+                    String name = task.getParticipants().get(i).getParticipantName();
+                    addParticipantView(name);
+                }
+            }
         }
 
         taskLocationView.setOnFocusChangeListener(new View.OnFocusChangeListener() {
@@ -173,6 +188,13 @@ public class TaskFragment extends DialogFragment {
                 if (!hasFocus && (!taskLocationView.getText().toString().equals(""))) {
                     clearLocationButton.setVisibility(View.VISIBLE);
                 }
+            }
+        });
+
+        addParticipantButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                addParticipantView("");
             }
         });
 
@@ -294,20 +316,38 @@ public class TaskFragment extends DialogFragment {
                 String taskTitle = taskTitleView.getText().toString();
                 String taskDetails = taskDetailView.getText().toString();
                 String taskLocation = taskLocationView.getText().toString();
-                String taskParticipant = taskParticipantView.getText().toString();
+              //  String taskParticipant = taskParticipantView.getText().toString();
 
                 if (taskTitle != null && !taskTitle.equals((String) null) && !taskTitle.equals("")) {
 
                     task.setTaskTitle(taskTitle);
                     task.setTaskDetails(taskDetails);
                     task.setLocationName(taskLocation);
-                    if (!taskParticipant.equals(null) && !taskParticipant.equals("")) {
+
+                    if (participantNumber > 0) {
+                        Log.d(TAG, "participantNumber = " + participantNumber);
+                        List<Participant> participants = new ArrayList<Participant>();
+
+                        for (int i = 0; i < participantNumber; i++) {
+                            EditText editText = (EditText) addTaskView.findViewById(i);
+                            String taskParticipant = editText.getText().toString();
+                            Log.d(TAG, "participant name = " + taskParticipant);
+
+                            if (!taskParticipant.equals(null) && !taskParticipant.equals("")) {
+                                Participant participant = new Participant();
+                                participant.setParticipantName(taskParticipant);
+                                participants.add(participant);
+                            }
+                        }
+                        task.setParticipants(participants);
+                    }
+                 /*   if (!taskParticipant.equals(null) && !taskParticipant.equals("")) {
                         Participant participant = new Participant();
                         participant.setParticipantName(taskParticipant);
                         List<Participant> participants = new ArrayList<Participant>();
                         participants.add(participant);
                         task.setParticipants(participants);
-                    }
+                    } */
 
 
                     if (dateInMilliseconds != 0 || timeInMilliseconds != 0) {
@@ -643,4 +683,58 @@ public class TaskFragment extends DialogFragment {
         }
         return isAvailable;
     }
+
+    public void addParticipantView(String name) {
+        final LinearLayout layout = new LinearLayout(getActivity());
+        layout.setLayoutParams(new ActionBar.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+        layout.setOrientation(LinearLayout.HORIZONTAL);
+
+        final EditText editText = new EditText(getActivity());
+        editText.setLayoutParams(new ActionBar.LayoutParams(
+                ActionBar.LayoutParams.WRAP_CONTENT,
+                ActionBar.LayoutParams.WRAP_CONTENT
+        ));
+        editText.setTextSize(16);
+        editText.setHint("Participant name");
+        editText.setText(name);
+        editText.setId(participantNumber);
+
+        final Button button = new Button(getActivity());
+        button.setLayoutParams(new ActionBar.LayoutParams(40, 40));
+        button.setGravity(Gravity.CENTER_VERTICAL);
+        button.setBackgroundResource(R.drawable.clearx);
+        button.setId(participantNumber + R.string.remove_participant);
+        button.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+                int id = editText.getId();
+
+                layout.removeView(editText);
+                layout.removeView(button);
+                taskParticipantLayout.removeView(layout);
+
+                Log.d(TAG, "id of text clicked = " + id);
+
+                for (int i = id + 1; i < participantNumber; i++) {
+
+                    Log.d(TAG, "This got called " + (i-id) + " times!");
+                    EditText editText1 = (EditText) addTaskView.findViewById(i);
+                    editText1.setId(i - 1);
+                    Button button1 = (Button) addTaskView.findViewById(i + R.string.remove_participant);
+                    button1.setId((i - 1) + R.string.remove_participant);
+                }
+                participantNumber--;
+            }
+        });
+
+
+        participantNumber++;
+
+        layout.addView(editText);
+        layout.addView(button);
+
+        taskParticipantLayout.addView(layout);
+    }
+
 }
