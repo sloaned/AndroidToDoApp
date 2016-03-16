@@ -758,7 +758,7 @@ public class TaskFragment extends DialogFragment {
         Cursor phones = null;
 
         try {
-            phones = getActivity().getContentResolver().query(ContactsContract.CommonDataKinds.Phone.CONTENT_URI, null, null, null, null);
+            phones = getActivity().getContentResolver().query(ContactsContract.Data.CONTENT_URI, ContactsConstants.PROJECTION, null, null, null);
 
             if (phones.moveToFirst()) {
                 Log.d(TAG, "got something in phones");
