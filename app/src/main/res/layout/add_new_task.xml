@@ -1,5 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
-    <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_height="match_parent"
+    android:layout_width="match_parent"
+    android:id="@+id/scrollView">
+
+    <LinearLayout
         android:orientation="vertical"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
@@ -25,7 +30,8 @@
                  android:layout_height="wrap_content"
                  android:id="@+id/newTaskTitleValue"
                  android:background="@android:color/transparent"
-                 android:textSize="14sp"/>
+                 android:textSize="14sp"
+                 android:maxLength="50"/>
 
 
          </LinearLayout>
@@ -179,3 +185,4 @@
 
 
     </LinearLayout>
+</ScrollView>

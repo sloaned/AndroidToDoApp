@@ -8,11 +8,13 @@ import android.app.TimePickerDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.SharedPreferences;
+import android.database.Cursor;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
+import android.provider.ContactsContract;
 import android.support.v4.app.DialogFragment;
 
 import android.util.Log;
@@ -24,6 +26,7 @@ import android.widget.Button;
 import android.widget.DatePicker;
 import android.widget.EditText;
 import android.widget.LinearLayout;
+import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.TimePicker;
 
@@ -32,6 +35,7 @@ import com.example.catalyst.androidtodo.activities.HomeActivity;
 import com.example.catalyst.androidtodo.models.Participant;
 import com.example.catalyst.androidtodo.models.Task;
 import com.example.catalyst.androidtodo.network.RetrofitInterfaces.ITask;
+import com.example.catalyst.androidtodo.util.ContactsConstants;
 import com.example.catalyst.androidtodo.util.SharedPreferencesConstants;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -312,6 +316,11 @@ public class TaskFragment extends DialogFragment {
         builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
+
+                ArrayList<String> names = getContactList();
+                for (String name : names) {
+                    Log.d(TAG, name);
+                }
 
                 String taskTitle = taskTitleView.getText().toString();
                 String taskDetails = taskDetailView.getText().toString();
@@ -714,11 +723,8 @@ public class TaskFragment extends DialogFragment {
                 layout.removeView(button);
                 taskParticipantLayout.removeView(layout);
 
-                Log.d(TAG, "id of text clicked = " + id);
-
                 for (int i = id + 1; i < participantNumber; i++) {
 
-                    Log.d(TAG, "This got called " + (i-id) + " times!");
                     EditText editText1 = (EditText) addTaskView.findViewById(i);
                     editText1.setId(i - 1);
                     Button button1 = (Button) addTaskView.findViewById(i + R.string.remove_participant);
@@ -735,6 +741,45 @@ public class TaskFragment extends DialogFragment {
         layout.addView(button);
 
         taskParticipantLayout.addView(layout);
+        final ScrollView scrollView = (ScrollView) addTaskView.findViewById(R.id.scrollView);
+        scrollView.post(new Runnable() {
+            @Override
+            public void run() {
+                scrollView.fullScroll(ScrollView.FOCUS_DOWN);
+            }
+        });
+    }
+
+
+    public ArrayList<String> getContactList() {
+
+        ArrayList<String> contacts = new ArrayList<String>();
+
+        Cursor phones = null;
+
+        try {
+            phones = getActivity().getContentResolver().query(ContactsContract.CommonDataKinds.Phone.CONTENT_URI, null, null, null, null);
+
+            if (phones.moveToFirst()) {
+                Log.d(TAG, "got something in phones");
+                do {
+                    String name = phones.getString(phones.getColumnIndex(ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME));
+
+                    contacts.add(name);
+                } while (phones.moveToNext());
+            } else {
+                Log.d(TAG, "didn't get nuthin");
+            }
+            phones.close();
+        } catch (Exception e) {
+            Log.e(TAG, e.getMessage());
+        } finally {
+            if (phones != null) {
+                phones.close();
+            }
+        }
+
+        return contacts;
     }
 
 }
