@@ -17,11 +17,15 @@ import android.preference.PreferenceManager;
 import android.provider.ContactsContract;
 import android.support.v4.app.DialogFragment;
 
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ArrayAdapter;
+import android.widget.AutoCompleteTextView;
 import android.widget.Button;
 import android.widget.DatePicker;
 import android.widget.EditText;
@@ -68,7 +72,7 @@ import retrofit2.converter.gson.GsonConverterFactory;
 /**
  * Created by dsloane on 3/8/2016.
  */
-public class TaskFragment extends DialogFragment {
+public class TaskFragment extends DialogFragment implements ContactFragment.ContactClickListener {
 
     public static final String TAG = TaskFragment.class.getSimpleName();
 
@@ -106,6 +110,8 @@ public class TaskFragment extends DialogFragment {
 
     private boolean editing = false;
     private int participantNumber = 0;
+
+   // private ArrayList<String> participantMatches = new ArrayList<String>();
 
     public TaskFragment() {}
 
@@ -247,18 +253,6 @@ public class TaskFragment extends DialogFragment {
                     public void onTimeSet(TimePicker view, int hour, int minute) {
                         long milliSeconds = (hour * 3600 * 1000) + (minute * 60 * 1000);
                         timeInMilliseconds = milliSeconds;
-                      /*
-                        if (dateInMilliseconds == 0) {
-                            Date date = new Date();
-                            long milliseconds = date.getTime();
-                            milliseconds += timeInMilliseconds;
-                            task.setDueDate(String.valueOf(milliseconds));
-                        }
-                        else {
-                            long milliseconds = dateInMilliseconds + timeInMilliseconds;
-
-                            task.setDueDate(String.valueOf(milliseconds));
-                        }   */
                         Log.d(TAG, "time in milliseconds = " + timeInMilliseconds);
 
                         String meridiem = "AM";
@@ -317,11 +311,6 @@ public class TaskFragment extends DialogFragment {
             @Override
             public void onClick(DialogInterface dialog, int which) {
 
-                ArrayList<String> names = getContactList();
-                for (String name : names) {
-                    Log.d(TAG, name);
-                }
-
                 String taskTitle = taskTitleView.getText().toString();
                 String taskDetails = taskDetailView.getText().toString();
                 String taskLocation = taskLocationView.getText().toString();
@@ -350,14 +339,6 @@ public class TaskFragment extends DialogFragment {
                         }
                         task.setParticipants(participants);
                     }
-                 /*   if (!taskParticipant.equals(null) && !taskParticipant.equals("")) {
-                        Participant participant = new Participant();
-                        participant.setParticipantName(taskParticipant);
-                        List<Participant> participants = new ArrayList<Participant>();
-                        participants.add(participant);
-                        task.setParticipants(participants);
-                    } */
-
 
                     if (dateInMilliseconds != 0 || timeInMilliseconds != 0) {
 
@@ -375,8 +356,6 @@ public class TaskFragment extends DialogFragment {
 
                         task.setDueDate(String.valueOf(milliseconds));
                     }
-
-                    String taskLocationCoordinates = "";
 
                     String tz = TimeZone.getDefault().getID();
 
@@ -609,7 +588,6 @@ public class TaskFragment extends DialogFragment {
         addTask.enqueue(new Callback<ResponseBody>() {
             @Override
             public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
-                Log.v(TAG, "Success editing!");
                 if (context instanceof HomeActivity) {
                     ((HomeActivity) context).updateList();
                 }
@@ -695,10 +673,15 @@ public class TaskFragment extends DialogFragment {
 
     public void addParticipantView(String name) {
         final LinearLayout layout = new LinearLayout(getActivity());
+
+        final ArrayList<String> participantMatches = getContactList();
         layout.setLayoutParams(new ActionBar.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
         layout.setOrientation(LinearLayout.HORIZONTAL);
+        layout.setGravity(Gravity.CENTER_VERTICAL);
 
-        final EditText editText = new EditText(getActivity());
+        final ArrayAdapter<String> adapter = new ArrayAdapter<String>(getActivity(), android.R.layout.simple_dropdown_item_1line, participantMatches);
+        final AutoCompleteTextView editText = new AutoCompleteTextView(getActivity());
+        editText.setAdapter(adapter);
         editText.setLayoutParams(new ActionBar.LayoutParams(
                 ActionBar.LayoutParams.WRAP_CONTENT,
                 ActionBar.LayoutParams.WRAP_CONTENT
@@ -708,8 +691,54 @@ public class TaskFragment extends DialogFragment {
         editText.setText(name);
         editText.setId(participantNumber);
 
+        /*editText.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                Log.d(TAG, "text changed!");
+                String search = s.toString();
+                participantMatches = searchContactList(search);
+                for (String result : participantMatches) {
+                    Log.d(TAG, result);
+                }
+
+                adapter.notifyDataSetChanged();
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+
+            }
+        });  */
+
+
+        final Button contactButton = new Button(getActivity());
+        contactButton.setLayoutParams(new ActionBar.LayoutParams(70, 70));
+        contactButton.setGravity(View.TEXT_ALIGNMENT_GRAVITY);
+        contactButton.setTextSize(12);
+        contactButton.setText("...");
+        contactButton.setId(participantNumber + R.string.show_contacts);
+        contactButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                ArrayList<String> names = getContactList();
+
+                DialogFragment dialog = ContactFragment.newInstance(names, editText.getId());
+
+                if (dialog.getDialog() != null) {
+                    dialog.getDialog().setCanceledOnTouchOutside(true);
+                }
+                dialog.setTargetFragment(TaskFragment.this, 0);
+                dialog.show(getFragmentManager(), "dialog");
+            }
+        });
+
         final Button button = new Button(getActivity());
-        button.setLayoutParams(new ActionBar.LayoutParams(40, 40));
+        button.setLayoutParams(new ActionBar.LayoutParams(45, 45));
         button.setGravity(Gravity.CENTER_VERTICAL);
         button.setBackgroundResource(R.drawable.clearx);
         button.setId(participantNumber + R.string.remove_participant);
@@ -738,6 +767,7 @@ public class TaskFragment extends DialogFragment {
         participantNumber++;
 
         layout.addView(editText);
+        layout.addView(contactButton);
         layout.addView(button);
 
         taskParticipantLayout.addView(layout);
@@ -748,6 +778,12 @@ public class TaskFragment extends DialogFragment {
                 scrollView.fullScroll(ScrollView.FOCUS_DOWN);
             }
         });
+    }
+
+    @Override
+    public void assignParticipant(String name, int id) {
+        AutoCompleteTextView editText = (AutoCompleteTextView) addTaskView.findViewById(id);
+        editText.setText(name);
     }
 
 
@@ -781,5 +817,42 @@ public class TaskFragment extends DialogFragment {
 
         return contacts;
     }
+
+
+    public ArrayList<String> searchContactList(String searchTerm) {
+        searchTerm = "%" + searchTerm + "%";
+        String[] selectionArgs = {searchTerm};
+
+        ArrayList<String> contacts = new ArrayList<String>();
+
+        Cursor phones = null;
+
+        try {
+            phones = getActivity().getContentResolver().query(ContactsContract.Data.CONTENT_URI, ContactsConstants.PROJECTION, ContactsConstants.SEARCH_SELECTION, selectionArgs, null);
+
+            if (phones.moveToFirst()) {
+                Log.d(TAG, "got something in phones");
+                do {
+                    String name = phones.getString(phones.getColumnIndex(ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME));
+
+                    contacts.add(name);
+                } while (phones.moveToNext());
+            } else {
+                Log.d(TAG, "didn't get nuthin");
+            }
+            phones.close();
+        } catch (Exception e) {
+            Log.e(TAG, e.getMessage());
+        } finally {
+            if (phones != null) {
+                phones.close();
+            }
+        }
+
+        return contacts;
+    }
+
+
+
 
 }

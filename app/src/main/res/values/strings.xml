@@ -20,6 +20,7 @@
     <string name="title_activity_home">HomeActivity</string>
 
     <string name="remove_participant">removeParticipant</string>
+    <string name="show_contacts">showContacts</string>
 
 
     <!-- API Keys, temporary -->
