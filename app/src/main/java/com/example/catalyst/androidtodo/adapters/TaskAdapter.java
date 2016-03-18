@@ -124,10 +124,6 @@ public class TaskAdapter extends RecyclerSwipeAdapter<TaskAdapter.TaskViewHolder
             mTaskDueDateText = (TextView) itemView.findViewById(R.id.taskDueDate);
             mTaskLocation = (TextView) itemView.findViewById(R.id.taskLocation);
             mTaskDeleteBtn = (ImageButton) itemView.findViewById(R.id.deleteTaskBtn);
-
-
-          //  itemView.setOnClickListener(this);
-
         }
 
         public void bindTask(final Task task) {
@@ -135,6 +131,8 @@ public class TaskAdapter extends RecyclerSwipeAdapter<TaskAdapter.TaskViewHolder
             mTaskNameText.setText(task.getTaskTitle());
 
             if (task.getDueDate() != null && !task.getDueDate().equals(null) && !task.getDueDate().equals("")) {
+
+                Log.d(TAG, "in bindTask in the adapter, dueDate not null, = " + task.getDueDate());
                 long milliseconds = Long.valueOf(task.getDueDate());
                 SimpleDateFormat dt = new SimpleDateFormat("EEE MMM dd hh:mm:ss z yyyy");
                 SimpleDateFormat dt1 = new SimpleDateFormat("EEE, MM/dd/yyyy 'at' h:mm aaa");
@@ -149,6 +147,8 @@ public class TaskAdapter extends RecyclerSwipeAdapter<TaskAdapter.TaskViewHolder
                 Log.d(TAG, "date = " + date);
                 dateString = dt1.format(date);
                 mTaskDueDateText.setText(dateString);
+            } else {
+                mTaskDueDateText.setText("");
             }
 
             if (task.getTaskDetails() != null && !task.getTaskDetails().equals(null) && !task.getTaskDetails().equals("")) {
@@ -157,6 +157,8 @@ public class TaskAdapter extends RecyclerSwipeAdapter<TaskAdapter.TaskViewHolder
 
             if (task.getLocationName() != null && !task.getLocationName().equals(null) && !task.getLocationName().equals("")) {
                 mTaskLocation.setText(task.getLocationName());
+            } else {
+                mTaskLocation.setText("");
             }
 
             mTaskDeleteBtn.setOnClickListener(new View.OnClickListener() {

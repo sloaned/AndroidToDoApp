@@ -54,6 +54,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.GregorianCalendar;
 import java.util.List;
 import java.util.TimeZone;
 
@@ -80,7 +81,7 @@ public class TaskFragment extends DialogFragment implements ContactFragment.Cont
 
     private static Task task;
     private long dateInMilliseconds = 0;
-    private long timeInMilliseconds = 0;
+    private long timeInMilliseconds = -1;
 
     private Gson gson = new GsonBuilder().setDateFormat("yyyy-MM-dd'T'HH:mm:ssZ").create();
     private OkHttpClient client = new OkHttpClient();
@@ -176,6 +177,9 @@ public class TaskFragment extends DialogFragment implements ContactFragment.Cont
                 } catch (ParseException e) {
                     Log.e(TAG, "date parsing error: " + e.getMessage());
                 }
+                timeInMilliseconds = milliseconds % 86400000;
+                dateInMilliseconds = milliseconds - timeInMilliseconds;
+
                 String theDate = dateFormat.format(date);
                 String theTime = timeFormat.format(date);
                 dateView.setText(theDate);
@@ -245,7 +249,13 @@ public class TaskFragment extends DialogFragment implements ContactFragment.Cont
             @Override
             public void onClick(View v) {
 
+
                 final Calendar calendar = Calendar.getInstance();
+
+                //TimeZone timeZone = TimeZone.getTimeZone("America/Los_Angeles");
+                TimeZone timeZone = TimeZone.getDefault();
+                calendar.setTimeZone(timeZone);
+
                 int hh = calendar.get(Calendar.HOUR_OF_DAY);
                 int mm = calendar.get(Calendar.MINUTE);
                 TimePickerDialog timePicker = new TimePickerDialog(getActivity(), new TimePickerDialog.OnTimeSetListener() {
@@ -275,6 +285,7 @@ public class TaskFragment extends DialogFragment implements ContactFragment.Cont
                         clearTimeButton.setVisibility(View.VISIBLE);
                     }
                 }, hh, mm, false);
+
                 timePicker.show();
             }
         });
@@ -291,7 +302,7 @@ public class TaskFragment extends DialogFragment implements ContactFragment.Cont
         clearTimeButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                timeInMilliseconds = 0;
+                timeInMilliseconds = -1;
                 timeView.setText("");
                 clearTimeButton.setVisibility(View.INVISIBLE);
             }
@@ -314,7 +325,6 @@ public class TaskFragment extends DialogFragment implements ContactFragment.Cont
                 String taskTitle = taskTitleView.getText().toString();
                 String taskDetails = taskDetailView.getText().toString();
                 String taskLocation = taskLocationView.getText().toString();
-              //  String taskParticipant = taskParticipantView.getText().toString();
 
                 if (taskTitle != null && !taskTitle.equals((String) null) && !taskTitle.equals("")) {
 
@@ -340,21 +350,33 @@ public class TaskFragment extends DialogFragment implements ContactFragment.Cont
                         task.setParticipants(participants);
                     }
 
-                    if (dateInMilliseconds != 0 || timeInMilliseconds != 0) {
+                    if (dateInMilliseconds != 0 || timeInMilliseconds != -1) {
 
                         long milliseconds = 0;
 
                         if (dateInMilliseconds == 0) {
-                            Date date = new Date();
-                            milliseconds = date.getTime();
+                            Calendar calStart = new GregorianCalendar();
+                            calStart.setTime(new Date());
+                            calStart.set(Calendar.HOUR_OF_DAY, 0);
+                            calStart.set(Calendar.MINUTE, 0);
+                            calStart.set(Calendar.SECOND, 0);
+                            calStart.set(Calendar.MILLISECOND, 0);
+                            Date midnightYesterday = calStart.getTime();
+                            Log.d(TAG, "midnight yesterday time = " + midnightYesterday.getTime());
+                            //Date date = new Date();
+                            milliseconds = midnightYesterday.getTime();
+                            Log.d(TAG, "date.getTime() gives us " + milliseconds);
                             milliseconds += timeInMilliseconds;
-                        } else if (timeInMilliseconds == 0) {
+                        } else if (timeInMilliseconds == -1) {
                             milliseconds = dateInMilliseconds + 86370000;
                         } else {
                             milliseconds = dateInMilliseconds + timeInMilliseconds;
                         }
 
                         task.setDueDate(String.valueOf(milliseconds));
+                    } else {
+                        Log.d(TAG, "dateInMilliseconds = " + dateInMilliseconds + ", timeInMilliseconds = " + timeInMilliseconds);
+                        task.setDueDate(null);
                     }
 
                     String tz = TimeZone.getDefault().getID();
@@ -370,6 +392,10 @@ public class TaskFragment extends DialogFragment implements ContactFragment.Cont
                         addTaskToDatabase();
                     } else {
                         updateTask();
+                    }
+
+                    if (context instanceof HomeActivity) {
+                        ((HomeActivity) context).getAllTasks();
                     }
 
                 }
@@ -658,9 +684,6 @@ public class TaskFragment extends DialogFragment implements ContactFragment.Cont
         timeView.setText(time);
     }
 
-
-
-
     private boolean isNetworkAvailable() {
         ConnectivityManager manager = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo networkInfo = manager.getActiveNetworkInfo();
@@ -690,31 +713,6 @@ public class TaskFragment extends DialogFragment implements ContactFragment.Cont
         editText.setHint("Participant name");
         editText.setText(name);
         editText.setId(participantNumber);
-
-        /*editText.addTextChangedListener(new TextWatcher() {
-            @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-
-            }
-
-            @Override
-            public void onTextChanged(CharSequence s, int start, int before, int count) {
-                Log.d(TAG, "text changed!");
-                String search = s.toString();
-                participantMatches = searchContactList(search);
-                for (String result : participantMatches) {
-                    Log.d(TAG, result);
-                }
-
-                adapter.notifyDataSetChanged();
-            }
-
-            @Override
-            public void afterTextChanged(Editable s) {
-
-            }
-        });  */
-
 
         final Button contactButton = new Button(getActivity());
         contactButton.setLayoutParams(new ActionBar.LayoutParams(70, 70));

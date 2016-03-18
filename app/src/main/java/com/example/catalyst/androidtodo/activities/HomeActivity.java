@@ -17,6 +17,8 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
+import android.widget.ImageView;
+import android.widget.ProgressBar;
 
 import com.example.catalyst.androidtodo.R;
 import com.example.catalyst.androidtodo.adapters.TaskAdapter;
@@ -69,6 +71,8 @@ public class HomeActivity extends AppCompatActivity implements AccountManagerCal
 
     @Bind(R.id.taskRecyclerView)RecyclerView mTaskListView;
     @Bind(R.id.new_task_button)Button newTaskButton;
+    @Bind(R.id.progressBar)ProgressBar mProgressBar;
+    @Bind(R.id.refreshImageView)ImageView mRefreshImageView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -92,14 +96,13 @@ public class HomeActivity extends AppCompatActivity implements AccountManagerCal
 
         adapter = new TaskAdapter(this, mTasks);
 
-
+        mTaskListView.setAdapter(adapter);
         RecyclerView.LayoutManager layoutManager = new LinearLayoutManager(this);
         mTaskListView.setLayoutManager(layoutManager);
 
         mTaskListView.addItemDecoration(new DividerItemDecoration(this, DividerItemDecoration.VERTICAL_LIST));
 
         mTaskListView.setHasFixedSize(true);
-
 
         newTaskButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -113,6 +116,13 @@ public class HomeActivity extends AppCompatActivity implements AccountManagerCal
             }
         });
 
+        mRefreshImageView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                getAllTasks();
+            }
+        });
+
     }
 
     @Override
@@ -122,13 +132,13 @@ public class HomeActivity extends AppCompatActivity implements AccountManagerCal
 
     @Override
     public void onResume() {
+        super.onResume();
         Log.d(TAG, "resumed!");
 
-        mTaskListView.setAdapter(adapter);
+        mRefreshImageView.setVisibility(View.VISIBLE);
+        mProgressBar.setVisibility(View.INVISIBLE);
+
         getAllTasks();
-
-        super.onResume();
-
     }
 
     @Override
@@ -177,7 +187,13 @@ public class HomeActivity extends AppCompatActivity implements AccountManagerCal
     }
 
     public void getAllTasks() {
+
+        toggleRefresh();
         mTasks.clear();
+        Log.d(TAG, "Here are the tasks: ");
+        for (Task task : mTasks) {
+            Log.d(TAG, task.getTaskTitle());
+        }
         adapter.notifyDataSetChanged();
         client = assignInterceptorWithToken();
         retrofit = new Retrofit.Builder()
@@ -195,6 +211,7 @@ public class HomeActivity extends AppCompatActivity implements AccountManagerCal
                 try {
 
                     String taskArray = response.body().string();
+                    Log.d(TAG, taskArray);
 
                     try {
                         JSONArray tasks = new JSONArray(taskArray);
@@ -221,6 +238,7 @@ public class HomeActivity extends AppCompatActivity implements AccountManagerCal
                                 task.setLocationName(jsonTask.getString(JSONConstants.JSON_TASK_LOCATION));
                             }
                             if (!jsonTask.isNull(JSONConstants.JSON_TASK_DUE_DATE)) {
+                                Log.d(TAG, "due date not null, due date = " + jsonTask.getString(JSONConstants.JSON_TASK_DUE_DATE));
                                 task.setDueDate(jsonTask.getString(JSONConstants.JSON_TASK_DUE_DATE));
                             }
                             if (!jsonTask.isNull(JSONConstants.JSON_TASK_TIMEZONE)) {
@@ -240,15 +258,16 @@ public class HomeActivity extends AppCompatActivity implements AccountManagerCal
                             }
 
                             mTasks.add(task);
+
                         }
 
                         runOnUiThread(new Runnable() {
                             @Override
                             public void run() {
                                 adapter.notifyDataSetChanged();
+                                toggleRefresh();
                             }
                         });
-
 
                     } catch (JSONException e) {
                         e.printStackTrace();
@@ -339,6 +358,17 @@ public class HomeActivity extends AppCompatActivity implements AccountManagerCal
         }
         dialog.show(this.getSupportFragmentManager(), "dialog");
         getAllTasks();
+    }
+
+    private void toggleRefresh() {
+        if (mProgressBar.getVisibility() == View.INVISIBLE) {
+            mProgressBar.setVisibility(View.VISIBLE);
+            mRefreshImageView.setVisibility(View.INVISIBLE);
+        }
+        else {
+            mProgressBar.setVisibility(View.INVISIBLE);
+            mRefreshImageView.setVisibility(View.VISIBLE);
+        }
     }
 
 

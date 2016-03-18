@@ -9,5 +9,7 @@ public class SharedPreferencesConstants {
 
     public static final String PREFS_TOKEN = "token";
 
+    public static final String PREFS_DUE_TIME = "dueDateTime";
+
 
 }
