@@ -17,6 +17,8 @@
     <string name="permission_rationale">"Contacts permissions are needed for providing email
         completions."
     </string>
+    <string name="accountType">com.example.catalyst.androidtodo</string>
+    <string name="contentAuthority">com.example.catalyst.androidtodo.provider</string>
     <string name="title_activity_home">HomeActivity</string>
 
     <string name="remove_participant">removeParticipant</string>

@@ -52,8 +52,22 @@ public class ApiCaller {
     private Context mContext;
 
     private boolean loggedIn;
+    private String userToken;
 
-    public ApiCaller(Context context) {
+    public ApiCaller() {
+       // prefs = PreferenceManager.getDefaultSharedPreferences(context);
+        //mEditor = prefs.edit();
+
+        client = assignInterceptor();
+
+        retrofit = new Retrofit.Builder()
+                .baseUrl(BASE_URL)
+                .addConverterFactory(GsonConverterFactory.create(gson))
+                .client(client)
+                .build();
+    }
+
+ /*   public ApiCaller(Context context) {
 
         mContext = context;
 
@@ -69,7 +83,7 @@ public class ApiCaller {
                 .addConverterFactory(GsonConverterFactory.create(gson))
                 .client(client)
                 .build();
-    }
+    } */
 
     private OkHttpClient assignInterceptor() {
         return client.newBuilder().addInterceptor(new Interceptor() {
@@ -157,7 +171,7 @@ public class ApiCaller {
         });
     }
 
-    public void loginUserAndGetToken(String username, String password) {
+    public String loginUserAndGetToken(String username, String password) {
 
         LoginUser loginRequest = new LoginUser();
         loginRequest.setUsername(username);
@@ -181,7 +195,9 @@ public class ApiCaller {
                     token += s;
                 }
                 Log.d(TAG, "Adding token to sharedPrefs, token = " + token);
-                mEditor.putString(SharedPreferencesConstants.PREFS_TOKEN, token).apply();
+                userToken = token;
+               // mEditor.putString(SharedPreferencesConstants.PREFS_TOKEN, token).apply();
+               /*
                 for (String head : response.headers().names()) {
                     Log.d(TAG, "Info: " + head + " " + response.headers().values(head));
                     if (head.equals(NetworkConstants.TOKEN_HEADER_VALUE)) {
@@ -193,17 +209,20 @@ public class ApiCaller {
                         mContext.startActivity(intent);
                     }
                     i++;
-                }
+                } */
 
             }
 
             @Override
             public void onFailure(Call<ResponseBody> call, Throwable t) {
                 Log.e(TAG, "Dat Failure: " + t.getMessage());
+                userToken = "";
             }
         });
         Log.d(TAG, "logged in? : " + loggedIn);
         //return loggedIn;
+
+        return userToken;
     }
 
     public void makeUserPostCall() {
