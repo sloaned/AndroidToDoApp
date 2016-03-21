@@ -17,8 +17,6 @@ import android.preference.PreferenceManager;
 import android.provider.ContactsContract;
 import android.support.v4.app.DialogFragment;
 
-import android.text.Editable;
-import android.text.TextWatcher;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
@@ -36,6 +34,7 @@ import android.widget.TimePicker;
 
 import com.example.catalyst.androidtodo.R;
 import com.example.catalyst.androidtodo.activities.HomeActivity;
+import com.example.catalyst.androidtodo.data.DBHelper;
 import com.example.catalyst.androidtodo.models.Participant;
 import com.example.catalyst.androidtodo.models.Task;
 import com.example.catalyst.androidtodo.network.RetrofitInterfaces.ITask;
@@ -58,7 +57,6 @@ import java.util.GregorianCalendar;
 import java.util.List;
 import java.util.TimeZone;
 
-import butterknife.Bind;
 import butterknife.ButterKnife;
 import okhttp3.Interceptor;
 import okhttp3.OkHttpClient;
@@ -332,6 +330,11 @@ public class TaskFragment extends DialogFragment implements ContactFragment.Cont
                     task.setTaskDetails(taskDetails);
                     task.setLocationName(taskLocation);
 
+                    Date date = new Date();
+                    long ms = date.getTime();
+                    Log.v(TAG, "new modified date = " + ms);
+                    task.setLastModifiedDate(ms);
+
                     if (participantNumber > 0) {
                         Log.d(TAG, "participantNumber = " + participantNumber);
                         List<Participant> participants = new ArrayList<Participant>();
@@ -389,9 +392,11 @@ public class TaskFragment extends DialogFragment implements ContactFragment.Cont
                     if (taskLocation != null && !taskLocation.equals("")) {
                         getLocationCoordinates(taskLocation);
                     } else if (!editing) {
-                        addTaskToDatabase();
+                        task.setSyncDate(0);
+                        task.setServerId(0);
+                        addTaskToLocalDatabase();
                     } else {
-                        updateTask();
+                        updateTaskLocally();
                     }
 
                     if (context instanceof HomeActivity) {
@@ -471,9 +476,11 @@ public class TaskFragment extends DialogFragment implements ContactFragment.Cont
                 public void onFailure(okhttp3.Call call, IOException e) {
                     Log.e(TAG, e.getMessage());
                     if (!editing) {
-                        addTaskToDatabase();
+                        task.setSyncDate(0);
+                        task.setServerId(0);
+                        addTaskToLocalDatabase();
                     } else {
-                        updateTask();
+                        updateTaskLocally();
                     }
 
                 }
@@ -500,19 +507,23 @@ public class TaskFragment extends DialogFragment implements ContactFragment.Cont
                                     if (task.getDueDate() != null && !task.getDueDate().equals("")) {
                                         getLocationTimezone(latitude, longitude);
                                     } else if (!editing) {
-                                        addTaskToDatabase();
+                                        task.setSyncDate(0);
+                                        task.setServerId(0);
+                                        addTaskToLocalDatabase();
                                     } else {
                                         Log.d(TAG, "editing the task");
-                                        updateTask();
+                                        updateTaskLocally();
                                     }
 
                                 }
 
 
                             } else if (!editing) {
-                            addTaskToDatabase();
+                                task.setSyncDate(0);
+                                task.setServerId(0);
+                                addTaskToLocalDatabase();
                             } else {
-                                updateTask();
+                                updateTaskLocally();
                             }
                         }
                     } catch (IOException e) {
@@ -524,9 +535,11 @@ public class TaskFragment extends DialogFragment implements ContactFragment.Cont
             });
 
         } else if (!editing) {
-            addTaskToDatabase();
+            task.setSyncDate(0);
+            task.setServerId(0);
+            addTaskToLocalDatabase();
         } else {
-            updateTask();
+            updateTaskLocally();
         }
 
 
@@ -555,7 +568,9 @@ public class TaskFragment extends DialogFragment implements ContactFragment.Cont
                 @Override
                 public void onFailure(okhttp3.Call call, IOException e) {
                     Log.e(TAG, e.getMessage());
-                    addTaskToDatabase();
+                    task.setSyncDate(0);
+                    task.setServerId(0);
+                    addTaskToLocalDatabase();
                 }
                 @Override
                 public void onResponse(okhttp3.Call call, okhttp3.Response response) throws IOException {
@@ -568,10 +583,12 @@ public class TaskFragment extends DialogFragment implements ContactFragment.Cont
                             task.setTimeZone(timeZoneId);
                         }
                         if (!editing) {
-                            addTaskToDatabase();
+                            task.setSyncDate(0);
+                            task.setServerId(0);
+                            addTaskToLocalDatabase();
                         } else {
                             Log.d(TAG, "updating the task");
-                            updateTask();
+                            updateTaskLocally();
                         }
 
 
@@ -579,18 +596,22 @@ public class TaskFragment extends DialogFragment implements ContactFragment.Cont
                         Log.e(TAG, "Error getting data: " + e.getMessage());
 
                         if (!editing) {
-                            addTaskToDatabase();
+                            task.setSyncDate(0);
+                            task.setServerId(0);
+                            addTaskToLocalDatabase();
                         } else {
                             Log.d(TAG, "updating the task");
-                            updateTask();
+                            updateTaskLocally();
                         }
                     } catch (JSONException e) {
                         Log.e(TAG, e.getMessage());
                         if (!editing) {
-                            addTaskToDatabase();
+                            task.setSyncDate(0);
+                            task.setServerId(0);
+                            addTaskToLocalDatabase();
                         } else {
                             Log.d(TAG, "updating the task");
-                            updateTask();
+                            updateTaskLocally();
                         }
                     }
                 }
@@ -598,61 +619,6 @@ public class TaskFragment extends DialogFragment implements ContactFragment.Cont
         }
     }
 
-    public void updateTask() {
-        client = assignInterceptorWithToken();
-        retrofit = new Retrofit.Builder()
-                .baseUrl(BASE_URL)
-                .addConverterFactory(GsonConverterFactory.create(gson))
-                .client(client)
-                .build();
-        apiCaller = retrofit.create(ITask.class);
-
-        Log.d(TAG, "The id of the task = " + task.getId());
-
-        Call<ResponseBody> addTask = apiCaller.editTask(task);
-
-        addTask.enqueue(new Callback<ResponseBody>() {
-            @Override
-            public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
-                if (context instanceof HomeActivity) {
-                    ((HomeActivity) context).updateList();
-                }
-            }
-
-            @Override
-            public void onFailure(Call<ResponseBody> call, Throwable t) {
-                Log.e(TAG, "Failure updating!");
-            }
-        });
-    }
-
-
-    public void addTaskToDatabase() {
-        client = assignInterceptorWithToken();
-        retrofit = new Retrofit.Builder()
-                .baseUrl(BASE_URL)
-                .addConverterFactory(GsonConverterFactory.create(gson))
-                .client(client)
-                .build();
-        apiCaller = retrofit.create(ITask.class);
-
-        Call<ResponseBody> addTask = apiCaller.createTask(task);
-
-        addTask.enqueue(new Callback<ResponseBody>() {
-            @Override
-            public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
-                Log.v(TAG, "Success!");
-                if (context instanceof HomeActivity) {
-                    ((HomeActivity) context).updateList();
-                }
-            }
-
-            @Override
-            public void onFailure(Call<ResponseBody> call, Throwable t) {
-                Log.e(TAG, "Failure!");
-            }
-        });
-    }
 
     public void onDateButtonClicked(View v) {
         final Calendar calendar = Calendar.getInstance();
@@ -848,6 +814,22 @@ public class TaskFragment extends DialogFragment implements ContactFragment.Cont
         }
 
         return contacts;
+    }
+
+
+
+
+
+    public void addTaskToLocalDatabase() {
+        DBHelper dbHelper = new DBHelper(getActivity());
+        dbHelper.addTask(task);
+        dbHelper.close();
+    }
+
+    public void updateTaskLocally() {
+        DBHelper dbHelper = new DBHelper(context);
+        dbHelper.updateTask(task);
+        dbHelper.close();
     }
 
 

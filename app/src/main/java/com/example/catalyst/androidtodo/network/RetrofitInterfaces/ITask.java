@@ -28,4 +28,7 @@ public interface ITask {
     @POST("task")
     Call<ResponseBody> createTask(@Body Task task);
 
+    @GET("syncTask")
+    Call<ResponseBody> getUnsynchedTasks();
+
 }

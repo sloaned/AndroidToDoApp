@@ -5,6 +5,7 @@ import android.accounts.AccountManagerCallback;
 import android.accounts.AccountManagerFuture;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.v4.app.DialogFragment;
@@ -22,6 +23,8 @@ import android.widget.ProgressBar;
 
 import com.example.catalyst.androidtodo.R;
 import com.example.catalyst.androidtodo.adapters.TaskAdapter;
+import com.example.catalyst.androidtodo.data.DBHelper;
+import com.example.catalyst.androidtodo.data.TaskContract;
 import com.example.catalyst.androidtodo.fragments.TaskFragment;
 import com.example.catalyst.androidtodo.fragments.DividerItemDecoration;
 import com.example.catalyst.androidtodo.models.Participant;
@@ -48,6 +51,7 @@ import okhttp3.Request;
 import okhttp3.ResponseBody;
 import retrofit2.Call;
 import retrofit2.Callback;
+import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 
@@ -78,6 +82,8 @@ public class HomeActivity extends AppCompatActivity implements AccountManagerCal
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_home);
+
+        //SQLiteDatabase taskDatabase = openOrCreateDatabase(TaskContract.DATABASE_NAME, MODE_PRIVATE, null);
 
         ButterKnife.bind(this);
 
@@ -119,7 +125,7 @@ public class HomeActivity extends AppCompatActivity implements AccountManagerCal
         mRefreshImageView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                getAllTasks();
+                syncTasks();
             }
         });
 
@@ -369,6 +375,188 @@ public class HomeActivity extends AppCompatActivity implements AccountManagerCal
             mProgressBar.setVisibility(View.INVISIBLE);
             mRefreshImageView.setVisibility(View.VISIBLE);
         }
+    }
+
+    private void syncTasks() {
+        client = assignInterceptorWithToken();
+        retrofit = new Retrofit.Builder()
+                .baseUrl(BASE_URL)
+                .addConverterFactory(GsonConverterFactory.create(gson))
+                .client(client)
+                .build();
+        apiCaller = retrofit.create(ITask.class);
+        Call<ResponseBody> getTasks = apiCaller.getUnsynchedTasks();
+
+        getTasks.enqueue(new Callback<ResponseBody>() {
+            @Override
+            public void onResponse(Call<ResponseBody> call, retrofit2.Response<ResponseBody> response) {
+
+                try {
+                    String taskArray = response.body().string();
+                    Log.d(TAG, taskArray);
+
+                    try {
+                        JSONArray tasks = new JSONArray(taskArray);
+                        Log.d(TAG, taskArray);
+                        for (int i = 0; i < tasks.length(); i++) {
+                            JSONObject jsonTask = tasks.getJSONObject(i);
+                            Task task = new Task();
+                            if (!jsonTask.isNull(JSONConstants.JSON_TASK_ID)) {
+                                task.setServerId(jsonTask.getInt(JSONConstants.JSON_TASK_ID));
+                            }
+                            if (!jsonTask.isNull(JSONConstants.JSON_TASK_SYNC_DATE)) {
+                                task.setSyncDate(jsonTask.getLong(JSONConstants.JSON_TASK_SYNC_DATE));
+                            }
+                            if (!jsonTask.isNull(JSONConstants.JSON_TASK_LAST_MODIFIED_DATE)) {
+                                task.setLastModifiedDate(jsonTask.getLong(JSONConstants.JSON_TASK_LAST_MODIFIED_DATE));
+                            }
+                            if (!jsonTask.isNull(JSONConstants.JSON_TASK_TITLE)) {
+                                task.setTaskTitle(jsonTask.getString(JSONConstants.JSON_TASK_TITLE));
+                            }
+                            if (!jsonTask.isNull(JSONConstants.JSON_TASK_DETAILS)) {
+                                task.setTaskDetails(jsonTask.getString(JSONConstants.JSON_TASK_DETAILS));
+                            }
+                            if (!jsonTask.isNull(JSONConstants.JSON_TASK_LONGITUDE)) {
+                                task.setLongitude(jsonTask.getDouble(JSONConstants.JSON_TASK_LONGITUDE));
+                            }
+                            if (!jsonTask.isNull(JSONConstants.JSON_TASK_LATITUDE)) {
+                                task.setLatitude(jsonTask.getDouble(JSONConstants.JSON_TASK_LATITUDE));
+                            }
+                            if (!jsonTask.isNull(JSONConstants.JSON_TASK_LOCATION)) {
+                                task.setLocationName(jsonTask.getString(JSONConstants.JSON_TASK_LOCATION));
+                            }
+                            if (!jsonTask.isNull(JSONConstants.JSON_TASK_DUE_DATE)) {
+                                Log.d(TAG, "due date not null, due date = " + jsonTask.getString(JSONConstants.JSON_TASK_DUE_DATE));
+                                task.setDueDate(jsonTask.getString(JSONConstants.JSON_TASK_DUE_DATE));
+                            }
+                            if (!jsonTask.isNull(JSONConstants.JSON_TASK_TIMEZONE)) {
+                                task.setTimeZone(jsonTask.getString(JSONConstants.JSON_TASK_TIMEZONE));
+                            }
+                            if (!jsonTask.isNull(JSONConstants.JSON_TASK_PARTICIPANTS)) {
+                                JSONArray participantsArray = jsonTask.getJSONArray(JSONConstants.JSON_TASK_PARTICIPANTS);
+                                List<Participant> participants = new ArrayList<Participant>();
+                                for (int j = 0; j < participantsArray.length(); j++) {
+                                    JSONObject participantObj = participantsArray.getJSONObject(j);
+                                    String name = participantObj.getString(JSONConstants.JSON_TASK_PARTICIPANT_NAME);
+                                    Participant participant = new Participant();
+                                    participant.setParticipantName(name);
+                                    participants.add(participant);
+                                }
+                                task.setParticipants(participants);
+                            }
+
+                            DBHelper dbHelper = new DBHelper(HomeActivity.this);
+                            if (dbHelper.doesTaskExist(task.getServerId())) {
+                                updateTaskLocally(task);
+                            } else {
+                                addTaskToLocalDatabase(task);
+                            }
+
+                        }
+
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
+
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                for (String head : response.headers().names()) {
+                    Log.v(TAG, head + " " + response.headers().values(head));
+                }
+
+            }
+
+            @Override
+            public void onFailure(Call<ResponseBody> call, Throwable t) {
+                Log.e(TAG, "Error: " + t.toString());
+            }
+        });
+
+        ArrayList<Task> unsyncedTasks = getLocalUnsynchedTasks();
+        for (Task task : unsyncedTasks) {
+            if (task.getServerId() < 1) {
+                addTaskToServerDatabase(task);
+            } else {
+                updateTaskOnServer(task);
+            }
+        }
+
+
+        getAllTasks();
+
+    }
+
+    public void addTaskToLocalDatabase(Task task) {
+        DBHelper dbHelper = new DBHelper(this);
+        dbHelper.addTask(task);
+        dbHelper.close();
+    }
+
+    public void updateTaskLocally(Task task) {
+        DBHelper dbHelper = new DBHelper(this);
+        dbHelper.updateTask(task);
+        dbHelper.close();
+    }
+
+    public ArrayList<Task> getLocalUnsynchedTasks() {
+        DBHelper dbHelper = new DBHelper(this);
+        ArrayList<Task> tasks = dbHelper.getUnsynchedTasks();
+        dbHelper.close();
+        return tasks;
+    }
+
+
+    public void addTaskToServerDatabase(Task task) {
+        client = assignInterceptorWithToken();
+        retrofit = new Retrofit.Builder()
+                .baseUrl(BASE_URL)
+                .addConverterFactory(GsonConverterFactory.create(gson))
+                .client(client)
+                .build();
+        apiCaller = retrofit.create(ITask.class);
+
+        Call<ResponseBody> addTask = apiCaller.createTask(task);
+
+        addTask.enqueue(new Callback<ResponseBody>() {
+            @Override
+            public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
+                Log.v(TAG, "Success!");
+                updateList();
+            }
+
+            @Override
+            public void onFailure(Call<ResponseBody> call, Throwable t) {
+                Log.e(TAG, "Failure!");
+            }
+        });
+    }
+
+
+    public void updateTaskOnServer(Task task) {
+        client = assignInterceptorWithToken();
+        retrofit = new Retrofit.Builder()
+                .baseUrl(BASE_URL)
+                .addConverterFactory(GsonConverterFactory.create(gson))
+                .client(client)
+                .build();
+        apiCaller = retrofit.create(ITask.class);
+
+        Log.d(TAG, "The id of the task = " + task.getId());
+
+        Call<ResponseBody> addTask = apiCaller.editTask(task);
+
+        addTask.enqueue(new Callback<ResponseBody>() {
+            @Override
+            public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
+                updateList();
+            }
+
+            @Override
+            public void onFailure(Call<ResponseBody> call, Throwable t) {
+                Log.e(TAG, "Failure updating!");
+            }
+        });
     }
 
 

@@ -49,8 +49,8 @@ public class MainActivity extends AppCompatActivity {
         prefs = PreferenceManager.getDefaultSharedPreferences(this);
         mEditor = prefs.edit();
        // mEditor.putString(SharedPreferencesConstants.PREFS_TOKEN, null).apply();
-
-        // SQLiteDatabase taskDatabase = openOrCreateDatabase(TaskContract.DATABASE_NAME, MODE_PRIVATE, null);
+        deleteDatabase(TaskContract.DATABASE_NAME);
+        SQLiteDatabase taskDatabase = openOrCreateDatabase(TaskContract.DATABASE_NAME, MODE_PRIVATE, null);
 
         if (!doesTokenExist()) {
             Intent intent = new Intent(this, LoginActivity.class);
@@ -58,7 +58,6 @@ public class MainActivity extends AppCompatActivity {
         } else {
 
             Log.d(TAG, "Logged in");
-            SQLiteDatabase taskDatabase = openOrCreateDatabase(TaskContract.DATABASE_NAME, MODE_PRIVATE, null);
             Intent intent = new Intent(this, HomeActivity.class);
             startActivity(intent);
         }

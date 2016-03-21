@@ -78,7 +78,7 @@ public class AccountAuthenticator extends AbstractAccountAuthenticator {
         String password = am.getPassword(account);
         Log.v(TAG, account.name +" " + account.type);
 
-        if (password != null) {
+      /*  if (password != null) {
             Log.v(TAG, " password exsists " + account.name +" " + password);
             String authToken = authenticate(account.name, password);
             if (!TextUtils.isEmpty(authToken)) {
@@ -88,11 +88,11 @@ public class AccountAuthenticator extends AbstractAccountAuthenticator {
                 result.putString(AccountManager.KEY_AUTHTOKEN, authToken);
                 return result;
             }
-        }
+        }  */
         // If we get here, then we couldn't access the user's password - so we
         // need to re-prompt them for their credentials. We do that by creating
         // an intent to display our AuthenticatorActivity panel.
-        Log.d(TAG,"Login ACtivity");
+        Log.d(TAG,"Login Activity");
         Intent intent = new Intent(context, LoginFragment.class);
         //intent.putExtra("username", account.name);
         intent.putExtra(ACCOUNTTYPE, authTokenType);
@@ -120,9 +120,9 @@ public class AccountAuthenticator extends AbstractAccountAuthenticator {
         Log.v(TAG, "hasFeatures()");
         return null;
     }
-    private String authenticate(String name,String password) {
+  /*  private String authenticate(String name,String password) {
         Log.v(TAG,String.format("authenticate %S %s",name,password));
-        return new ApiCaller().loginUserAndGetToken(name, password);
+        //return new ApiCaller().loginUserAndGetToken(name, password);
            // return new UserService().login(new LoginEntity(name, password)).execute().headers().get("X-AUTH-TOKEN");
-    }
+    } */
 }

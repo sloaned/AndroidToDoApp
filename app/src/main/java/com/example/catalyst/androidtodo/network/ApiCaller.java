@@ -54,7 +54,7 @@ public class ApiCaller {
     private boolean loggedIn;
     private String userToken;
 
-    public ApiCaller() {
+   /* public ApiCaller() {
        // prefs = PreferenceManager.getDefaultSharedPreferences(context);
         //mEditor = prefs.edit();
 
@@ -65,9 +65,9 @@ public class ApiCaller {
                 .addConverterFactory(GsonConverterFactory.create(gson))
                 .client(client)
                 .build();
-    }
+    } */
 
- /*   public ApiCaller(Context context) {
+    public ApiCaller(Context context) {
 
         mContext = context;
 
@@ -83,7 +83,7 @@ public class ApiCaller {
                 .addConverterFactory(GsonConverterFactory.create(gson))
                 .client(client)
                 .build();
-    } */
+    }
 
     private OkHttpClient assignInterceptor() {
         return client.newBuilder().addInterceptor(new Interceptor() {
@@ -196,8 +196,8 @@ public class ApiCaller {
                 }
                 Log.d(TAG, "Adding token to sharedPrefs, token = " + token);
                 userToken = token;
-               // mEditor.putString(SharedPreferencesConstants.PREFS_TOKEN, token).apply();
-               /*
+                mEditor.putString(SharedPreferencesConstants.PREFS_TOKEN, token).apply();
+
                 for (String head : response.headers().names()) {
                     Log.d(TAG, "Info: " + head + " " + response.headers().values(head));
                     if (head.equals(NetworkConstants.TOKEN_HEADER_VALUE)) {
@@ -209,7 +209,7 @@ public class ApiCaller {
                         mContext.startActivity(intent);
                     }
                     i++;
-                } */
+                } 
 
             }
 

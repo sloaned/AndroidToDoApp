@@ -44,5 +44,13 @@ public class TaskContract {
         public static final String COLUMN_LONGITUDE = "longitude";
 
         public static final String COLUMN_PARTICIPANT = "participants";
+
+        public static final String COLUMN_LAST_MODIFIED_DATE = "last_modified_date";
+
+        public static final String COLUMN_SYNC_DATE = "sync_date";
+
+        public static final String COLUMN_SERVER_ID = "server_id";
+
+        public static final String COLUMN_TIMEZONE = "timezone";
     }
 }

@@ -10,6 +10,8 @@ public class Task {
     @SerializedName("id")
     private int id;
 
+    private int serverId;
+
     @SerializedName("taskTitle")
     private String taskTitle;
 
@@ -18,6 +20,10 @@ public class Task {
 
     @SerializedName("dueDate")
     private String dueDate;
+
+    private long lastModifiedDate;
+
+    private long syncDate;
 
     private List<Participant> participants;
 
@@ -98,6 +104,30 @@ public class Task {
 
     public void setParticipants(List<Participant> participants) {
         this.participants = participants;
+    }
+
+    public long getLastModifiedDate() {
+        return lastModifiedDate;
+    }
+
+    public void setLastModifiedDate(long date) {
+        lastModifiedDate = date;
+    }
+
+    public long getSyncDate() {
+        return syncDate;
+    }
+
+    public void setSyncDate(long date) {
+        syncDate = date;
+    }
+
+    public int getServerId() {
+        return serverId;
+    }
+
+    public void setServerId(int serverId) {
+        this.serverId = serverId;
     }
 
 
