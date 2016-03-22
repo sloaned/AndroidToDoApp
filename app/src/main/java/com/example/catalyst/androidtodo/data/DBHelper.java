@@ -14,6 +14,7 @@ import com.example.catalyst.androidtodo.models.Task;
 
 import java.lang.reflect.ParameterizedType;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -206,6 +207,7 @@ public class DBHelper extends SQLiteOpenHelper {
 
     public Integer deleteTask(Integer id) {
         SQLiteDatabase db = this.getWritableDatabase();
+
         return db.delete(TaskContract.TaskEntry.TABLE_NAME,
                 TaskContract.TaskEntry._ID + " = ? ",
                 new String[] { Integer.toString(id) } );
@@ -220,8 +222,12 @@ public class DBHelper extends SQLiteOpenHelper {
             Task task = new Task();
             task.setTaskTitle(res.getString(res.getColumnIndex(TaskContract.TaskEntry.COLUMN_TASK_TITLE)));
             task.setTaskDetails(res.getString(res.getColumnIndex(TaskContract.TaskEntry.COLUMN_TASK_DETAILS)));
-            task.setDueDate(res.getString(res.getColumnIndex(TaskContract.TaskEntry.COLUMN_DUE_DATE)));
+            task.setDueDate(res.getLong(res.getColumnIndex(TaskContract.TaskEntry.COLUMN_DUE_DATE)));
             task.setLocationName(res.getString(res.getColumnIndex(TaskContract.TaskEntry.COLUMN_LOCATION_NAME)));
+            task.setTimeZone(res.getString(res.getColumnIndex(TaskContract.TaskEntry.COLUMN_TIMEZONE)));
+            task.setLatitude(res.getDouble(res.getColumnIndex(TaskContract.TaskEntry.COLUMN_LATITUDE)));
+            task.setLongitude(res.getDouble(res.getColumnIndex(TaskContract.TaskEntry.COLUMN_LONGITUDE)));
+
 
             int id = res.getInt(res.getColumnIndex(TaskContract.TaskEntry._ID));
             List<Participant> participants = getTaskParticipants(id);
@@ -245,9 +251,10 @@ public class DBHelper extends SQLiteOpenHelper {
             Task task = new Task();
 
             Log.v(TAG, "unsynched task name = " + res.getString(res.getColumnIndex(TaskContract.TaskEntry.COLUMN_TASK_TITLE)));
+            Log.v(TAG, "last modified: " + res.getLong(res.getColumnIndex(TaskContract.TaskEntry.COLUMN_LAST_MODIFIED_DATE)) + ", synched: " + res.getLong(res.getColumnIndex(TaskContract.TaskEntry.COLUMN_SYNC_DATE)));
             task.setTaskTitle(res.getString(res.getColumnIndex(TaskContract.TaskEntry.COLUMN_TASK_TITLE)));
             task.setTaskDetails(res.getString(res.getColumnIndex(TaskContract.TaskEntry.COLUMN_TASK_DETAILS)));
-            task.setDueDate(res.getString(res.getColumnIndex(TaskContract.TaskEntry.COLUMN_DUE_DATE)));
+            task.setDueDate(res.getLong(res.getColumnIndex(TaskContract.TaskEntry.COLUMN_DUE_DATE)));
             task.setLocationName(res.getString(res.getColumnIndex(TaskContract.TaskEntry.COLUMN_LOCATION_NAME)));
             task.setServerId(res.getInt(res.getColumnIndex(TaskContract.TaskEntry.COLUMN_SERVER_ID)));
             task.setLastModifiedDate(res.getLong(res.getColumnIndex(TaskContract.TaskEntry.COLUMN_LAST_MODIFIED_DATE)));
@@ -262,11 +269,38 @@ public class DBHelper extends SQLiteOpenHelper {
             task.setParticipants(participants);
 
             taskList.add(task);
+
+            updateSyncDate(task, id);
+
             res.moveToNext();
         }
         res.close();
         db.close();
         return taskList;
+    }
+
+    public void updateSyncDate(Task task, int id) {
+        Task newTask = new Task();
+        newTask.setTaskTitle(task.getTaskTitle());
+        newTask.setTaskDetails(task.getTaskDetails());
+        newTask.setTimeZone(task.getTimeZone());
+        newTask.setLocationName(task.getLocationName());
+        newTask.setLatitude(task.getLatitude());
+        newTask.setLongitude(task.getLongitude());
+        newTask.setId(id);
+        newTask.setLastModifiedDate(task.getLastModifiedDate());
+        newTask.setDueDate(task.getDueDate());
+        newTask.setServerId(task.getServerId());
+
+        List<Participant> participants = getTaskParticipants(id);
+
+        newTask.setParticipants(participants);
+
+
+        Date date = new Date();
+        long milliseconds = date.getTime();
+        newTask.setSyncDate(milliseconds);
+        updateTask(newTask);
     }
 
     public Participant getParticipantById(int id) {

@@ -161,7 +161,7 @@ public class TaskFragment extends DialogFragment implements ContactFragment.Cont
                 taskLocationView.setText(task.getLocationName());
                 clearLocationButton.setVisibility(View.VISIBLE);
             }
-            if (task.getDueDate() != null && !task.getDueDate().equals(null) && !task.getDueDate().equals("")) {
+            if (task.getDueDate() != 0 /*&& !task.getDueDate().equals(null) && !task.getDueDate().equals("") */) {
                 long milliseconds = Long.valueOf(task.getDueDate());
                 SimpleDateFormat dt = new SimpleDateFormat("EEE MMM dd hh:mm:ss z yyyy");
                 SimpleDateFormat dateFormat = new SimpleDateFormat("MM/dd/yyyy");
@@ -335,9 +335,10 @@ public class TaskFragment extends DialogFragment implements ContactFragment.Cont
                     Log.v(TAG, "new modified date = " + ms);
                     task.setLastModifiedDate(ms);
 
+                    List<Participant> participants = new ArrayList<Participant>();
+
                     if (participantNumber > 0) {
                         Log.d(TAG, "participantNumber = " + participantNumber);
-                        List<Participant> participants = new ArrayList<Participant>();
 
                         for (int i = 0; i < participantNumber; i++) {
                             EditText editText = (EditText) addTaskView.findViewById(i);
@@ -350,8 +351,9 @@ public class TaskFragment extends DialogFragment implements ContactFragment.Cont
                                 participants.add(participant);
                             }
                         }
-                        task.setParticipants(participants);
                     }
+
+                    task.setParticipants(participants);
 
                     if (dateInMilliseconds != 0 || timeInMilliseconds != -1) {
 
@@ -376,16 +378,16 @@ public class TaskFragment extends DialogFragment implements ContactFragment.Cont
                             milliseconds = dateInMilliseconds + timeInMilliseconds;
                         }
 
-                        task.setDueDate(String.valueOf(milliseconds));
+                        task.setDueDate(milliseconds);
                     } else {
                         Log.d(TAG, "dateInMilliseconds = " + dateInMilliseconds + ", timeInMilliseconds = " + timeInMilliseconds);
-                        task.setDueDate(null);
+                       // task.setDueDate(null);
                     }
 
                     String tz = TimeZone.getDefault().getID();
 
                     Log.d(TAG, "The timezone id is " + tz);
-                    if (taskLocation == null || taskLocation.equals("") && task.getDueDate() == null) {
+                    if (taskLocation == null || taskLocation.equals("") /*&& task.getDueDate() == null */) {
                         task.setTimeZone(tz);
                     }
 
@@ -400,7 +402,7 @@ public class TaskFragment extends DialogFragment implements ContactFragment.Cont
                     }
 
                     if (context instanceof HomeActivity) {
-                        ((HomeActivity) context).getAllTasks();
+                        ((HomeActivity) context).getAllTasksLocally();
                     }
 
                 }
@@ -504,7 +506,7 @@ public class TaskFragment extends DialogFragment implements ContactFragment.Cont
                                     task.setLatitude(location.getDouble("lat"));
                                     task.setLongitude(location.getDouble("lng"));
 
-                                    if (task.getDueDate() != null && !task.getDueDate().equals("")) {
+                                    if (task.getDueDate() != 0 /* && !task.getDueDate().equals("")*/) {
                                         getLocationTimezone(latitude, longitude);
                                     } else if (!editing) {
                                         task.setSyncDate(0);
@@ -821,15 +823,21 @@ public class TaskFragment extends DialogFragment implements ContactFragment.Cont
 
 
     public void addTaskToLocalDatabase() {
-        DBHelper dbHelper = new DBHelper(getActivity());
+        DBHelper dbHelper = new DBHelper(context);
         dbHelper.addTask(task);
         dbHelper.close();
+        if (context instanceof HomeActivity) {
+            ((HomeActivity) context).getAllTasksLocally();
+        }
     }
 
     public void updateTaskLocally() {
         DBHelper dbHelper = new DBHelper(context);
         dbHelper.updateTask(task);
         dbHelper.close();
+        if (context instanceof HomeActivity) {
+            ((HomeActivity) context).getAllTasksLocally();
+        }
     }
 
 

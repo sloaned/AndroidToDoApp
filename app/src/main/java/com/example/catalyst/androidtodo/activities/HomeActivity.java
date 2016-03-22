@@ -58,8 +58,6 @@ import retrofit2.converter.gson.GsonConverterFactory;
 public class HomeActivity extends AppCompatActivity implements AccountManagerCallback<Bundle>, TaskFragment.getAllMethods {
 
     private final String TAG = getClass().getSimpleName();
-    private AccountManager accountManager;
-    private String type;
 
     private static final String BASE_URL = "http://pc30120.catalystsolves.com:8080/";
 
@@ -92,14 +90,6 @@ public class HomeActivity extends AppCompatActivity implements AccountManagerCal
 
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-
-        type = "com.example.catalyst.androidtodo";
-       // accountManager = AccountManager.get(this);
-       //Account acc = new Account(type, type);
-
-       // accountManager.getAuthToken(acc, type, null, this, this, null);
-
-
         adapter = new TaskAdapter(this, mTasks);
 
         mTaskListView.setAdapter(adapter);
@@ -118,7 +108,6 @@ public class HomeActivity extends AppCompatActivity implements AccountManagerCal
                     dialog.getDialog().setCanceledOnTouchOutside(false);
                 }
                 dialog.show(HomeActivity.this.getSupportFragmentManager(), "dialog");
-                getAllTasks();
             }
         });
 
@@ -129,22 +118,22 @@ public class HomeActivity extends AppCompatActivity implements AccountManagerCal
             }
         });
 
+        mRefreshImageView.setVisibility(View.VISIBLE);
+        mProgressBar.setVisibility(View.INVISIBLE);
+
+        getAllTasksFromServer();
+
     }
 
     @Override
     public void updateList() {
-        getAllTasks();
+        getAllTasksLocally();
     }
 
     @Override
     public void onResume() {
         super.onResume();
         Log.d(TAG, "resumed!");
-
-        mRefreshImageView.setVisibility(View.VISIBLE);
-        mProgressBar.setVisibility(View.INVISIBLE);
-
-        getAllTasks();
     }
 
     @Override
@@ -192,21 +181,19 @@ public class HomeActivity extends AppCompatActivity implements AccountManagerCal
         }).start();
     }
 
-    public void getAllTasks() {
+    public void getAllTasksFromServer() {
 
         toggleRefresh();
         mTasks.clear();
-        Log.d(TAG, "Here are the tasks: ");
-        for (Task task : mTasks) {
-            Log.d(TAG, task.getTaskTitle());
-        }
-        adapter.notifyDataSetChanged();
+
         client = assignInterceptorWithToken();
         retrofit = new Retrofit.Builder()
                 .baseUrl(BASE_URL)
                 .addConverterFactory(GsonConverterFactory.create(gson))
                 .client(client)
                 .build();
+
+
         apiCaller = retrofit.create(ITask.class);
         Call<ResponseBody> getTasks = apiCaller.getAllTasks();
 
@@ -244,8 +231,8 @@ public class HomeActivity extends AppCompatActivity implements AccountManagerCal
                                 task.setLocationName(jsonTask.getString(JSONConstants.JSON_TASK_LOCATION));
                             }
                             if (!jsonTask.isNull(JSONConstants.JSON_TASK_DUE_DATE)) {
-                                Log.d(TAG, "due date not null, due date = " + jsonTask.getString(JSONConstants.JSON_TASK_DUE_DATE));
-                                task.setDueDate(jsonTask.getString(JSONConstants.JSON_TASK_DUE_DATE));
+                                Log.d(TAG, "due date back from server, due date = " + jsonTask.getString(JSONConstants.JSON_TASK_DUE_DATE));
+                                task.setDueDate(jsonTask.getLong(JSONConstants.JSON_TASK_DUE_DATE));
                             }
                             if (!jsonTask.isNull(JSONConstants.JSON_TASK_TIMEZONE)) {
                                 task.setTimeZone(jsonTask.getString(JSONConstants.JSON_TASK_TIMEZONE));
@@ -264,6 +251,14 @@ public class HomeActivity extends AppCompatActivity implements AccountManagerCal
                             }
 
                             mTasks.add(task);
+
+                            DBHelper dbHelper = new DBHelper(HomeActivity.this);
+                            if (dbHelper.doesTaskExist(task.getServerId())) {
+                                updateTaskLocally(task);
+                            } else {
+                                addTaskToLocalDatabase(task);
+                            }
+                            dbHelper.close();
 
                         }
 
@@ -313,8 +308,13 @@ public class HomeActivity extends AppCompatActivity implements AccountManagerCal
         }).build();
     }
 
-    public void deleteTask(final int id) {
-        //mTasks.clear();
+    public void deleteTaskLocally(int id) {
+        DBHelper dbHelper = new DBHelper(this);
+        dbHelper.deleteTask(id);
+        dbHelper.close();
+    }
+
+    public void deleteTaskFromServer(final int serverId, final int localId) {
         client = assignInterceptorWithToken();
         retrofit = new Retrofit.Builder()
                 .baseUrl(BASE_URL)
@@ -322,12 +322,12 @@ public class HomeActivity extends AppCompatActivity implements AccountManagerCal
                 .client(client)
                 .build();
         apiCaller = retrofit.create(ITask.class);
-        Call<ResponseBody> deleteTask = apiCaller.deleteTask(id);
+        Call<ResponseBody> deleteTask = apiCaller.deleteTask(serverId);
         deleteTask.enqueue(new Callback<ResponseBody>() {
             @Override
             public void onResponse(Call<ResponseBody> call, retrofit2.Response<ResponseBody> response) {
                 Log.d(TAG, "delete successful");
-                int position = getTaskPosition(id);
+                int position = getTaskPosition(localId);
                 if (position > -1) {
                     mTasks.remove(position);
                     runOnUiThread(new Runnable() {
@@ -337,6 +337,8 @@ public class HomeActivity extends AppCompatActivity implements AccountManagerCal
                         }
                     });
                 }
+
+                deleteTaskLocally(localId);
 
             }
 
@@ -363,7 +365,7 @@ public class HomeActivity extends AppCompatActivity implements AccountManagerCal
             dialog.getDialog().setCanceledOnTouchOutside(false);
         }
         dialog.show(this.getSupportFragmentManager(), "dialog");
-        getAllTasks();
+        getAllTasksLocally();
     }
 
     private void toggleRefresh() {
@@ -378,6 +380,9 @@ public class HomeActivity extends AppCompatActivity implements AccountManagerCal
     }
 
     private void syncTasks() {
+
+        // get tasks from server first
+
         client = assignInterceptorWithToken();
         retrofit = new Retrofit.Builder()
                 .baseUrl(BASE_URL)
@@ -393,6 +398,7 @@ public class HomeActivity extends AppCompatActivity implements AccountManagerCal
 
                 try {
                     String taskArray = response.body().string();
+                    Log.d(TAG, "now getting unsynched tasks from the server");
                     Log.d(TAG, taskArray);
 
                     try {
@@ -427,7 +433,7 @@ public class HomeActivity extends AppCompatActivity implements AccountManagerCal
                             }
                             if (!jsonTask.isNull(JSONConstants.JSON_TASK_DUE_DATE)) {
                                 Log.d(TAG, "due date not null, due date = " + jsonTask.getString(JSONConstants.JSON_TASK_DUE_DATE));
-                                task.setDueDate(jsonTask.getString(JSONConstants.JSON_TASK_DUE_DATE));
+                                task.setDueDate(jsonTask.getLong(JSONConstants.JSON_TASK_DUE_DATE));
                             }
                             if (!jsonTask.isNull(JSONConstants.JSON_TASK_TIMEZONE)) {
                                 task.setTimeZone(jsonTask.getString(JSONConstants.JSON_TASK_TIMEZONE));
@@ -445,13 +451,15 @@ public class HomeActivity extends AppCompatActivity implements AccountManagerCal
                                 task.setParticipants(participants);
                             }
 
+                            // update tasks locally
+
                             DBHelper dbHelper = new DBHelper(HomeActivity.this);
                             if (dbHelper.doesTaskExist(task.getServerId())) {
                                 updateTaskLocally(task);
                             } else {
                                 addTaskToLocalDatabase(task);
                             }
-
+                            dbHelper.close();
                         }
 
                     } catch (JSONException e) {
@@ -473,8 +481,14 @@ public class HomeActivity extends AppCompatActivity implements AccountManagerCal
             }
         });
 
+
+        // send local unsynched tasks to server
+
+        Log.d(TAG, "now sending unsynched tasks to the server");
+
         ArrayList<Task> unsyncedTasks = getLocalUnsynchedTasks();
         for (Task task : unsyncedTasks) {
+            Log.d(TAG, task.getTaskTitle());
             if (task.getServerId() < 1) {
                 addTaskToServerDatabase(task);
             } else {
@@ -482,8 +496,15 @@ public class HomeActivity extends AppCompatActivity implements AccountManagerCal
             }
         }
 
+        // call local database to show all tasks
 
-        getAllTasks();
+        getAllTasksLocally();
+
+
+        Log.d(TAG, "Tasks have been synched. now mTasks contains: ");
+        for (Task task : mTasks) {
+            Log.v(TAG, task.getTaskTitle());
+        }
 
     }
 
@@ -504,6 +525,21 @@ public class HomeActivity extends AppCompatActivity implements AccountManagerCal
         ArrayList<Task> tasks = dbHelper.getUnsynchedTasks();
         dbHelper.close();
         return tasks;
+    }
+
+    public void getAllTasksLocally() {
+        Log.v(TAG, "getAllTasksLocally()");
+        toggleRefresh();
+        mTasks.clear();
+        DBHelper dbHelper = new DBHelper(this);
+        ArrayList<Task> tasks = dbHelper.getAllTasks();
+        for (Task task : tasks) {
+            Log.d(TAG, task.getTaskTitle());
+            mTasks.add(task);
+        }
+        dbHelper.close();
+        toggleRefresh();
+        adapter.notifyDataSetChanged();
     }
 
 

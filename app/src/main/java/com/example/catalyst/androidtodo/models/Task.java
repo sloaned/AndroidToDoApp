@@ -19,7 +19,7 @@ public class Task {
     private String taskDetails;
 
     @SerializedName("dueDate")
-    private String dueDate;
+    private long dueDate;
 
     private long lastModifiedDate;
 
@@ -82,11 +82,11 @@ public class Task {
         this.taskDetails = taskDetails;
     }
 
-    public String getDueDate() {
+    public long getDueDate() {
         return dueDate;
     }
 
-    public void setDueDate(String dueDate) {
+    public void setDueDate(long dueDate) {
         this.dueDate = dueDate;
     }
 

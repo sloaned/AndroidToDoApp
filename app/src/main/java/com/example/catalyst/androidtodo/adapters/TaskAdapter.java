@@ -130,7 +130,7 @@ public class TaskAdapter extends RecyclerSwipeAdapter<TaskAdapter.TaskViewHolder
             mTask = task;
             mTaskNameText.setText(task.getTaskTitle());
 
-            if (task.getDueDate() != null && !task.getDueDate().equals(null) && !task.getDueDate().equals("")) {
+            if (task.getDueDate() != 0/* && !task.getDueDate().equals(null) && !task.getDueDate().equals("")*/) {
 
                 Log.d(TAG, "in bindTask in the adapter, dueDate not null, = " + task.getDueDate());
                 long milliseconds = Long.valueOf(task.getDueDate());
@@ -165,8 +165,11 @@ public class TaskAdapter extends RecyclerSwipeAdapter<TaskAdapter.TaskViewHolder
                 @Override
                 public void onClick(View v) {
                     if (mContext instanceof HomeActivity) {
-                        ((HomeActivity) mContext).deleteTask(task.getId());
-
+                        if (task.getServerId() == 0) {
+                            ((HomeActivity) mContext).deleteTaskLocally(task.getId());
+                        } else {
+                            ((HomeActivity) mContext).deleteTaskFromServer(task.getServerId(), task.getId());
+                        }
                     }
 
                 }
