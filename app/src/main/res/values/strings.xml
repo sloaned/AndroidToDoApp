@@ -28,5 +28,6 @@
     <!-- API Keys, temporary -->
     <string name="google_maps_apikey">AIzaSyDTlAi9krTLWAoa8vfYH5fmBF2FsBM-QXg</string>
     <string name="google_timezone_apikey">AIzaSyA6qL8z3XqZvFa-dVfCKx3dPMP6efxSad8</string>
+    <string name="add_participants_field">Participants:</string>
 
 </resources>

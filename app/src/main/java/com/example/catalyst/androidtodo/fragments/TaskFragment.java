@@ -13,6 +13,7 @@ import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Looper;
 import android.preference.PreferenceManager;
 import android.provider.ContactsContract;
 import android.support.v4.app.DialogFragment;
@@ -25,6 +26,7 @@ import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
 import android.widget.Button;
+import android.widget.CheckBox;
 import android.widget.DatePicker;
 import android.widget.EditText;
 import android.widget.LinearLayout;
@@ -56,6 +58,7 @@ import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.List;
 import java.util.TimeZone;
+import java.util.logging.Handler;
 
 import butterknife.ButterKnife;
 import okhttp3.Interceptor;
@@ -101,9 +104,11 @@ public class TaskFragment extends DialogFragment implements ContactFragment.Cont
     private TextView timeView;
     private Button datePickerButton;
     private Button timePickerButton;
+    private Button pickLocationButton;
     private Button clearTimeButton;
     private Button clearDateButton;
     private Button clearLocationButton;
+    private CheckBox markCompletedCheckbox;
     private Button addParticipantButton;
     private LinearLayout taskParticipantLayout;
 
@@ -144,6 +149,8 @@ public class TaskFragment extends DialogFragment implements ContactFragment.Cont
        // taskParticipantView = (EditText) addTaskView.findViewById(R.id.newTaskParticipantsValue);
         taskParticipantLayout = (LinearLayout) addTaskView.findViewById(R.id.newTaskParticipantsLayout);
         addParticipantButton = (Button) addTaskView.findViewById(R.id.newTaskParticipantButton);
+        pickLocationButton = (Button) addTaskView.findViewById(R.id.pickLocationButton);
+        markCompletedCheckbox = (CheckBox) addTaskView.findViewById(R.id.taskCompletedCheckbox);
 
         //ButterKnife.bind(getActivity());
 
@@ -192,6 +199,10 @@ public class TaskFragment extends DialogFragment implements ContactFragment.Cont
                     addParticipantView(name);
                 }
             }
+
+            if (task.isCompleted()) {
+                markCompletedCheckbox.setChecked(true);
+            }
         }
 
         taskLocationView.setOnFocusChangeListener(new View.OnFocusChangeListener() {
@@ -207,6 +218,19 @@ public class TaskFragment extends DialogFragment implements ContactFragment.Cont
             @Override
             public void onClick(View v) {
                 addParticipantView("");
+            }
+        });
+
+        pickLocationButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                DialogFragment dialog = MapPickerFragment.newInstance();
+
+                if (dialog.getDialog() != null) {
+                    dialog.getDialog().setCanceledOnTouchOutside(true);
+                }
+                dialog.setTargetFragment(TaskFragment.this, 0);
+                dialog.show(getFragmentManager(), "dialog");
             }
         });
 
@@ -386,6 +410,12 @@ public class TaskFragment extends DialogFragment implements ContactFragment.Cont
 
                     String tz = TimeZone.getDefault().getID();
 
+                    if (markCompletedCheckbox.isChecked()) {
+                        task.setCompleted(true);
+                    } else {
+                        task.setCompleted(false);
+                    }
+
                     Log.d(TAG, "The timezone id is " + tz);
                     if (taskLocation == null || taskLocation.equals("") /*&& task.getDueDate() == null */) {
                         task.setTimeZone(tz);
@@ -400,10 +430,10 @@ public class TaskFragment extends DialogFragment implements ContactFragment.Cont
                     } else {
                         updateTaskLocally();
                     }
-
+            /*
                     if (context instanceof HomeActivity) {
-                        ((HomeActivity) context).getAllTasksLocally();
-                    }
+                        ((HomeActivity) context).getUncompletedTasks();
+                    }  */
 
                 }
 
@@ -827,16 +857,28 @@ public class TaskFragment extends DialogFragment implements ContactFragment.Cont
         dbHelper.addTask(task);
         dbHelper.close();
         if (context instanceof HomeActivity) {
-            ((HomeActivity) context).getAllTasksLocally();
+            ((HomeActivity) context).runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    ((HomeActivity) context).getUncompletedTasks();
+                }
+            });
         }
     }
 
     public void updateTaskLocally() {
         DBHelper dbHelper = new DBHelper(context);
+        Log.d(TAG, "updating task. Completed? : " + task.isCompleted());
         dbHelper.updateTask(task);
         dbHelper.close();
         if (context instanceof HomeActivity) {
-            ((HomeActivity) context).getAllTasksLocally();
+
+            ((HomeActivity) context).runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    ((HomeActivity) context).getUncompletedTasks();
+                }
+            });
         }
     }
 

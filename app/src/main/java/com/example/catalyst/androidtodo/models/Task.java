@@ -34,6 +34,8 @@ public class Task {
 
     private String timeZone;
 
+    private boolean completed;
+
     public String getLocationName() {
         return locationName;
     }
@@ -128,6 +130,14 @@ public class Task {
 
     public void setServerId(int serverId) {
         this.serverId = serverId;
+    }
+
+    public boolean isCompleted() {
+        return completed;
+    }
+
+    public void setCompleted(boolean completed) {
+        this.completed = completed;
     }
 
 

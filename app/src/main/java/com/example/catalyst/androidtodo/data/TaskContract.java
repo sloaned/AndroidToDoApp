@@ -52,5 +52,7 @@ public class TaskContract {
         public static final String COLUMN_SERVER_ID = "server_id";
 
         public static final String COLUMN_TIMEZONE = "timezone";
+
+        public static final String COLUMN_COMPLETED = "completed";
     }
 }

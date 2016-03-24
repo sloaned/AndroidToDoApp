@@ -85,10 +85,6 @@ public class TaskAdapter extends RecyclerSwipeAdapter<TaskAdapter.TaskViewHolder
         holder.swipeLayout.getSurfaceView().setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                String taskName = holder.mTaskNameText.getText().toString();
-
-                Toast.makeText(mContext, taskName, Toast.LENGTH_SHORT).show();
-
                 if (mContext instanceof HomeActivity) {
                     ((HomeActivity) mContext).showTask(holder.mTask);
                 }

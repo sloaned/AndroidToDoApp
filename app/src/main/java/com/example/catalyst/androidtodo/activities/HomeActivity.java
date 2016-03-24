@@ -20,6 +20,7 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
+import android.widget.Toast;
 
 import com.example.catalyst.androidtodo.R;
 import com.example.catalyst.androidtodo.adapters.TaskAdapter;
@@ -71,10 +72,15 @@ public class HomeActivity extends AppCompatActivity implements AccountManagerCal
     private SharedPreferences prefs;
     private SharedPreferences.Editor mEditor;
 
+    private int tasksSyncedFromServer;
+    private int tasksSyncedToServer;
+
     @Bind(R.id.taskRecyclerView)RecyclerView mTaskListView;
     @Bind(R.id.new_task_button)Button newTaskButton;
     @Bind(R.id.progressBar)ProgressBar mProgressBar;
     @Bind(R.id.refreshImageView)ImageView mRefreshImageView;
+    @Bind(R.id.viewCompletedTasksButton)Button viewCompletedTasksButton;
+    @Bind(R.id.viewUncompletedTasksButton)Button viewUncompletedTasksButton;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -100,6 +106,8 @@ public class HomeActivity extends AppCompatActivity implements AccountManagerCal
 
         mTaskListView.setHasFixedSize(true);
 
+        viewUncompletedTasksButton.setVisibility(View.GONE);
+
         newTaskButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -108,6 +116,22 @@ public class HomeActivity extends AppCompatActivity implements AccountManagerCal
                     dialog.getDialog().setCanceledOnTouchOutside(false);
                 }
                 dialog.show(HomeActivity.this.getSupportFragmentManager(), "dialog");
+            }
+        });
+
+        viewCompletedTasksButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                getCompletedTasks();
+                //toggleButtons();
+            }
+        });
+
+        viewUncompletedTasksButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                getUncompletedTasks();
+                // toggleButtons();
             }
         });
 
@@ -127,7 +151,7 @@ public class HomeActivity extends AppCompatActivity implements AccountManagerCal
 
     @Override
     public void updateList() {
-        getAllTasksLocally();
+        getUncompletedTasks();
     }
 
     @Override
@@ -213,7 +237,7 @@ public class HomeActivity extends AppCompatActivity implements AccountManagerCal
                             JSONObject jsonTask = tasks.getJSONObject(i);
                             Task task = new Task();
                             if (!jsonTask.isNull(JSONConstants.JSON_TASK_ID)) {
-                                task.setId(jsonTask.getInt(JSONConstants.JSON_TASK_ID));
+                                task.setServerId(jsonTask.getInt(JSONConstants.JSON_TASK_ID));
                             }
                             if (!jsonTask.isNull(JSONConstants.JSON_TASK_TITLE)) {
                                 task.setTaskTitle(jsonTask.getString(JSONConstants.JSON_TASK_TITLE));
@@ -237,6 +261,9 @@ public class HomeActivity extends AppCompatActivity implements AccountManagerCal
                             if (!jsonTask.isNull(JSONConstants.JSON_TASK_TIMEZONE)) {
                                 task.setTimeZone(jsonTask.getString(JSONConstants.JSON_TASK_TIMEZONE));
                             }
+                            if (!jsonTask.isNull(JSONConstants.JSON_TASK_COMPLETED)) {
+                                task.setCompleted(jsonTask.getBoolean(JSONConstants.JSON_TASK_COMPLETED));
+                            }
                             if (!jsonTask.isNull(JSONConstants.JSON_TASK_PARTICIPANTS)) {
                                 JSONArray participantsArray = jsonTask.getJSONArray(JSONConstants.JSON_TASK_PARTICIPANTS);
                                 List<Participant> participants = new ArrayList<Participant>();
@@ -250,7 +277,9 @@ public class HomeActivity extends AppCompatActivity implements AccountManagerCal
                                 task.setParticipants(participants);
                             }
 
-                            mTasks.add(task);
+                            if (!task.isCompleted()) {
+                                mTasks.add(task);
+                            }
 
                             DBHelper dbHelper = new DBHelper(HomeActivity.this);
                             if (dbHelper.doesTaskExist(task.getServerId())) {
@@ -365,7 +394,7 @@ public class HomeActivity extends AppCompatActivity implements AccountManagerCal
             dialog.getDialog().setCanceledOnTouchOutside(false);
         }
         dialog.show(this.getSupportFragmentManager(), "dialog");
-        getAllTasksLocally();
+        getUncompletedTasks();
     }
 
     private void toggleRefresh() {
@@ -376,6 +405,18 @@ public class HomeActivity extends AppCompatActivity implements AccountManagerCal
         else {
             mProgressBar.setVisibility(View.INVISIBLE);
             mRefreshImageView.setVisibility(View.VISIBLE);
+        }
+    }
+
+    private void toggleButtons() {
+        Log.d(TAG, "viewCompletedTasksButton visibility = " + viewCompletedTasksButton.getVisibility());
+        Log.d(TAG, "viewUncompletedTasksbutton visibility = " + viewUncompletedTasksButton.getVisibility());
+        if (viewCompletedTasksButton.getVisibility() == View.GONE) {
+            viewUncompletedTasksButton.setVisibility(View.GONE);
+            viewCompletedTasksButton.setVisibility(View.VISIBLE);
+        } else {
+            viewUncompletedTasksButton.setVisibility(View.VISIBLE);
+            viewCompletedTasksButton.setVisibility(View.GONE);
         }
     }
 
@@ -403,7 +444,8 @@ public class HomeActivity extends AppCompatActivity implements AccountManagerCal
 
                     try {
                         JSONArray tasks = new JSONArray(taskArray);
-                        Log.d(TAG, taskArray);
+
+                        tasksSyncedFromServer = tasks.length();
                         for (int i = 0; i < tasks.length(); i++) {
                             JSONObject jsonTask = tasks.getJSONObject(i);
                             Task task = new Task();
@@ -438,6 +480,11 @@ public class HomeActivity extends AppCompatActivity implements AccountManagerCal
                             if (!jsonTask.isNull(JSONConstants.JSON_TASK_TIMEZONE)) {
                                 task.setTimeZone(jsonTask.getString(JSONConstants.JSON_TASK_TIMEZONE));
                             }
+                            if (!jsonTask.isNull(JSONConstants.JSON_TASK_COMPLETED)) {
+                                task.setCompleted(jsonTask.getBoolean(JSONConstants.JSON_TASK_COMPLETED));
+                            }
+
+
                             if (!jsonTask.isNull(JSONConstants.JSON_TASK_PARTICIPANTS)) {
                                 JSONArray participantsArray = jsonTask.getJSONArray(JSONConstants.JSON_TASK_PARTICIPANTS);
                                 List<Participant> participants = new ArrayList<Participant>();
@@ -487,6 +534,7 @@ public class HomeActivity extends AppCompatActivity implements AccountManagerCal
         Log.d(TAG, "now sending unsynched tasks to the server");
 
         ArrayList<Task> unsyncedTasks = getLocalUnsynchedTasks();
+        tasksSyncedToServer = unsyncedTasks.size();
         for (Task task : unsyncedTasks) {
             Log.d(TAG, task.getTaskTitle());
             if (task.getServerId() < 1) {
@@ -498,13 +546,18 @@ public class HomeActivity extends AppCompatActivity implements AccountManagerCal
 
         // call local database to show all tasks
 
-        getAllTasksLocally();
+        getUncompletedTasks();
 
 
         Log.d(TAG, "Tasks have been synched. now mTasks contains: ");
         for (Task task : mTasks) {
             Log.v(TAG, task.getTaskTitle());
         }
+
+        String message = "Sync successful. " + tasksSyncedToServer + " tasks uploaded to server, " +
+                tasksSyncedFromServer + " tasks imported from server";
+        Log.d(TAG, "message = " + message);
+        Toast.makeText(this, message, Toast.LENGTH_LONG).show();
 
     }
 
@@ -526,13 +579,51 @@ public class HomeActivity extends AppCompatActivity implements AccountManagerCal
         dbHelper.close();
         return tasks;
     }
-
+/*
     public void getAllTasksLocally() {
         Log.v(TAG, "getAllTasksLocally()");
         toggleRefresh();
         mTasks.clear();
         DBHelper dbHelper = new DBHelper(this);
         ArrayList<Task> tasks = dbHelper.getAllTasks();
+        for (Task task : tasks) {
+            Log.d(TAG, task.getTaskTitle());
+            mTasks.add(task);
+        }
+        dbHelper.close();
+        toggleRefresh();
+        adapter.notifyDataSetChanged();
+    } */
+
+    public void getCompletedTasks() {
+        if (viewUncompletedTasksButton.getVisibility() == View.GONE) {
+            viewCompletedTasksButton.setVisibility(View.GONE);
+            viewUncompletedTasksButton.setVisibility(View.VISIBLE);
+        }
+        Log.v(TAG, "getCompletedTasks()");
+        toggleRefresh();
+        mTasks.clear();
+        DBHelper dbHelper = new DBHelper(this);
+        ArrayList<Task> tasks = dbHelper.getCompletedTasks();
+        for (Task task : tasks) {
+            Log.d(TAG, task.getTaskTitle());
+            mTasks.add(task);
+        }
+        dbHelper.close();
+        toggleRefresh();
+        adapter.notifyDataSetChanged();
+    }
+
+    public void getUncompletedTasks() {
+        if (viewCompletedTasksButton.getVisibility() == View.GONE) {
+            viewUncompletedTasksButton.setVisibility(View.GONE);
+            viewCompletedTasksButton.setVisibility(View.VISIBLE);
+        }
+        Log.v(TAG, "getUncompletedTasks()");
+        toggleRefresh();
+        mTasks.clear();
+        DBHelper dbHelper = new DBHelper(this);
+        ArrayList<Task> tasks = dbHelper.getUncompletedTasks();
         for (Task task : tasks) {
             Log.d(TAG, task.getTaskTitle());
             mTasks.add(task);
