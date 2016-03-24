@@ -5,7 +5,6 @@ import android.accounts.AccountManagerCallback;
 import android.accounts.AccountManagerFuture;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.v4.app.DialogFragment;
@@ -25,7 +24,6 @@ import android.widget.Toast;
 import com.example.catalyst.androidtodo.R;
 import com.example.catalyst.androidtodo.adapters.TaskAdapter;
 import com.example.catalyst.androidtodo.data.DBHelper;
-import com.example.catalyst.androidtodo.data.TaskContract;
 import com.example.catalyst.androidtodo.fragments.TaskFragment;
 import com.example.catalyst.androidtodo.fragments.DividerItemDecoration;
 import com.example.catalyst.androidtodo.models.Participant;
@@ -111,11 +109,7 @@ public class HomeActivity extends AppCompatActivity implements AccountManagerCal
         newTaskButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                DialogFragment dialog = TaskFragment.newInstance(null);
-                if (dialog.getDialog() != null) {
-                    dialog.getDialog().setCanceledOnTouchOutside(false);
-                }
-                dialog.show(HomeActivity.this.getSupportFragmentManager(), "dialog");
+                showTask(null);
             }
         });
 
@@ -389,11 +383,12 @@ public class HomeActivity extends AppCompatActivity implements AccountManagerCal
 
 
     public void showTask(Task task) {
-        DialogFragment dialog = TaskFragment.newInstance(task);
-        if (dialog.getDialog() != null) {
-            dialog.getDialog().setCanceledOnTouchOutside(false);
-        }
-        dialog.show(this.getSupportFragmentManager(), "dialog");
+
+        Intent intent = new Intent(this, DetailActivity.class);
+
+        intent.putExtra("Task", task);
+
+        startActivity(intent);
         getUncompletedTasks();
     }
 

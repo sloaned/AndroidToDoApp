@@ -1,213 +1,237 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_height="match_parent"
-    android:layout_width="match_parent"
-    android:id="@+id/scrollView">
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              android:layout_width="match_parent"
+              android:layout_height="match_parent"
+              android:orientation="vertical">
+    <ScrollView
+        android:layout_height="wrap_content"
+        android:layout_width="match_parent"
+        android:id="@+id/scrollView">
+
+        <LinearLayout
+            android:orientation="vertical"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:paddingRight="10dp"
+            android:paddingLeft="10dp">
+
+             <LinearLayout
+                android:orientation="horizontal"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                 android:paddingLeft="5dp"
+                android:layout_marginTop="5dp"
+                android:layout_marginBottom="5dp">
+
+                 <TextView
+                     android:layout_width="wrap_content"
+                     android:layout_height="wrap_content"
+                     android:id="@+id/newTaskTitleLabel"
+                     android:text="Title: " />
+
+                 <EditText
+                     android:layout_width="wrap_content"
+                     android:layout_height="wrap_content"
+                     android:id="@+id/newTaskTitleValue"
+                     android:background="@android:color/transparent"
+                     android:textSize="14sp"
+                     android:maxLength="50"/>
+
+
+             </LinearLayout>
+
+            <LinearLayout
+                android:orientation="horizontal"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:paddingLeft="5dp"
+                android:layout_marginTop="5dp"
+                android:layout_marginBottom="5dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/newTaskDetailsLabel"
+                    android:text="Details: "/>
+
+                <EditText
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/newTaskDetailsValue"
+                    android:textSize="12sp"
+                    android:background="@android:color/transparent"/>
+
+            </LinearLayout>
+
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:layout_marginTop="5dp"
+                android:layout_marginBottom="5dp">
+
+                <LinearLayout
+                    android:orientation="horizontal"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1">
+
+
+                    <Button
+                        android:id="@+id/newTaskDatePickerBtn"
+                        android:layout_width="30dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="2"
+                        android:text="Set Due Date"
+                        android:textSize="9sp"
+                        android:layout_marginRight="10dp"/>
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="6"
+                        android:id="@+id/newTaskDateValue" />
+
+                    <Button
+                        android:layout_width="20dp"
+                        android:layout_height="20dp"
+                        android:id="@+id/clearDateButton"
+                        android:background="@drawable/clearx"/>
+
+                </LinearLayout>
+                <LinearLayout
+                    android:orientation="horizontal"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1">
+
+                    <Button
+                        android:layout_width="30dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="2"
+                        android:id="@+id/newTaskTimePickerBtn"
+                        android:text="Set Time"
+                        android:textSize="9sp"
+                        android:layout_marginRight="10dp"/>
+
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="6"
+                        android:id="@+id/newTaskTimeValue" />
+
+                    <Button
+                        android:layout_width="20dp"
+                        android:layout_height="20dp"
+                        android:id="@+id/clearTimeButton"
+                        android:background="@drawable/clearx"/>
+
+
+
+
+                </LinearLayout>
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/task_completed_layout"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Completed? "/>
+
+                <CheckBox
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/taskCompletedCheckbox"/>
+            </LinearLayout>
+
+            <LinearLayout
+                android:orientation="horizontal"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:paddingLeft="5dp"
+                android:layout_marginTop="5dp"
+                android:layout_marginBottom="5dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/newTaskLocationLabel"
+                    android:text="Location: " />
+
+                <EditText
+                    android:layout_width="wrap_content"
+                    android:minWidth="100dp"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/newTaskLocationValue"
+                    android:background="@android:color/transparent"
+                    android:textSize="14sp"/>
+
+                <Button
+                    android:layout_width="40dp"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/pickLocationButton"
+                    android:gravity="center"
+                    android:text="..."/>
+
+                <Button
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:id="@+id/clearLocationButton"
+                    android:background="@drawable/clearx"/>
+
+            </LinearLayout>
+
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="@string/add_participants_field"
+                android:paddingLeft="5dp"/>
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/newTaskParticipantsLayout"
+                android:orientation="vertical">
+
+            </LinearLayout>
+
+            <Button
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/newTaskParticipantButton"
+                android:text="Add participant"
+                android:textSize="12sp"/>
+
+
+        </LinearLayout>
+    </ScrollView>
 
     <LinearLayout
-        android:orientation="vertical"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:paddingRight="10dp"
-        android:paddingLeft="10dp">
-
-         <LinearLayout
-            android:orientation="horizontal"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-             android:paddingLeft="5dp"
-            android:layout_marginTop="5dp"
-            android:layout_marginBottom="5dp">
-
-             <TextView
-                 android:layout_width="wrap_content"
-                 android:layout_height="wrap_content"
-                 android:id="@+id/newTaskTitleLabel"
-                 android:text="Title: " />
-
-             <EditText
-                 android:layout_width="wrap_content"
-                 android:layout_height="wrap_content"
-                 android:id="@+id/newTaskTitleValue"
-                 android:background="@android:color/transparent"
-                 android:textSize="14sp"
-                 android:maxLength="50"/>
-
-
-         </LinearLayout>
-
-        <LinearLayout
-            android:orientation="horizontal"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:paddingLeft="5dp"
-            android:layout_marginTop="5dp"
-            android:layout_marginBottom="5dp">
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:id="@+id/newTaskDetailsLabel"
-                android:text="Details: "/>
-
-            <EditText
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:id="@+id/newTaskDetailsValue"
-                android:textSize="12sp"
-                android:background="@android:color/transparent"/>
-
-        </LinearLayout>
-
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:layout_marginTop="5dp"
-            android:layout_marginBottom="5dp">
-
-            <LinearLayout
-                android:orientation="horizontal"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_weight="1">
-
-
-                <Button
-                    android:id="@+id/newTaskDatePickerBtn"
-                    android:layout_width="30dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="2"
-                    android:text="Set Due Date"
-                    android:textSize="9sp"
-                    android:layout_marginRight="10dp"/>
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="6"
-                    android:id="@+id/newTaskDateValue" />
-
-                <Button
-                    android:layout_width="20dp"
-                    android:layout_height="20dp"
-                    android:id="@+id/clearDateButton"
-                    android:background="@drawable/clearx"/>
-
-            </LinearLayout>
-            <LinearLayout
-                android:orientation="horizontal"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_weight="1">
-
-                <Button
-                    android:layout_width="30dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="2"
-                    android:id="@+id/newTaskTimePickerBtn"
-                    android:text="Set Time"
-                    android:textSize="9sp"
-                    android:layout_marginRight="10dp"/>
-
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="6"
-                    android:id="@+id/newTaskTimeValue" />
-
-                <Button
-                    android:layout_width="20dp"
-                    android:layout_height="20dp"
-                    android:id="@+id/clearTimeButton"
-                    android:background="@drawable/clearx"/>
-
-
-
-
-            </LinearLayout>
-
-        </LinearLayout>
-
-        <LinearLayout
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:id="@+id/task_completed_layout"
-            android:orientation="horizontal">
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Completed? "/>
-
-            <CheckBox
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:id="@+id/taskCompletedCheckbox"/>
-        </LinearLayout>
-
-        <LinearLayout
-            android:orientation="horizontal"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:paddingLeft="5dp"
-            android:layout_marginTop="5dp"
-            android:layout_marginBottom="5dp">
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:id="@+id/newTaskLocationLabel"
-                android:text="Location: " />
-
-            <EditText
-                android:layout_width="wrap_content"
-                android:minWidth="100dp"
-                android:layout_height="wrap_content"
-                android:id="@+id/newTaskLocationValue"
-                android:background="@android:color/transparent"
-                android:textSize="14sp"/>
-
-            <Button
-                android:layout_width="40dp"
-                android:layout_height="wrap_content"
-                android:id="@+id/pickLocationButton"
-                android:gravity="center"
-                android:text="..."/>
-
-            <Button
-                android:layout_width="20dp"
-                android:layout_height="20dp"
-                android:id="@+id/clearLocationButton"
-                android:background="@drawable/clearx"/>
-
-        </LinearLayout>
-
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="@string/add_participants_field"
-            android:paddingLeft="5dp"/>
-
-        <LinearLayout
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:id="@+id/newTaskParticipantsLayout"
-            android:orientation="vertical">
-
-        </LinearLayout>
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
 
         <Button
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:id="@+id/newTaskParticipantButton"
-            android:text="Add participant"
-            android:textSize="12sp"/>
+            android:text="Cancel"
+            android:id="@+id/cancelTaskButton"/>
 
-
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Save"
+            android:id="@+id/saveTaskButton"/>
     </LinearLayout>
-</ScrollView>
+
+</LinearLayout>

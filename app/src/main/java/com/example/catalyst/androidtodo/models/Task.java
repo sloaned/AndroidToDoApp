@@ -2,10 +2,11 @@ package com.example.catalyst.androidtodo.models;
 
 import com.google.gson.annotations.SerializedName;
 
+import java.io.Serializable;
 import java.util.List;
 
 
-public class Task {
+public class Task implements Serializable {
 
     @SerializedName("id")
     private int id;

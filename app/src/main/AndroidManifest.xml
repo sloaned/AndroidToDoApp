@@ -42,13 +42,18 @@
                 android:value="com.example.catalyst.androidtodo.activities.MainActivity"/>
         </activity>
         <activity
-            android:name=".LoginActivity"
-            android:label="@string/title_activity_login">
-        </activity>
-        <activity
             android:name=".activities.HomeActivity"
             android:label="@string/title_activity_home"
             android:theme="@style/AppTheme.NoActionBar">
+        </activity>
+
+        <activity
+            android:name=".activities.DetailActivity"
+            android:label="@string/title_activity_home"
+            android:theme="@style/AppTheme.NoActionBar">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.example.catalyst.androidtodo.activities.HomeActivity"/>
         </activity>
     </application>
 

@@ -2,10 +2,12 @@ package com.example.catalyst.androidtodo.models;
 
 import com.google.gson.annotations.SerializedName;
 
+import java.io.Serializable;
+
 /**
  * Created by dsloane on 3/15/2016.
  */
-public class Participant {
+public class Participant implements Serializable {
 
     @SerializedName("id")
     private int id;

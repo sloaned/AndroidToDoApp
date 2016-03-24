@@ -9,6 +9,7 @@ import android.database.sqlite.SQLiteOpenHelper;
 import android.provider.Telephony;
 import android.util.Log;
 
+import com.example.catalyst.androidtodo.activities.DetailActivity;
 import com.example.catalyst.androidtodo.models.Participant;
 import com.example.catalyst.androidtodo.models.Task;
 
@@ -267,7 +268,7 @@ public class DBHelper extends SQLiteOpenHelper {
         Log.d(TAG, "in dbHelper, getCompletedTasks()");
         ArrayList<Task> taskList = new ArrayList<Task>();
         SQLiteDatabase db = this.getReadableDatabase();
-        Cursor res = db.rawQuery( "SELECT * FROM " + TaskContract.TaskEntry.TABLE_NAME + " WHERE " + TaskContract.TaskEntry.COLUMN_COMPLETED + " = " + 1 + "", null);
+        Cursor res = db.rawQuery( "SELECT * FROM " + TaskContract.TaskEntry.TABLE_NAME + " WHERE " + TaskContract.TaskEntry.COLUMN_COMPLETED + " = " + 1 + " ORDER BY " + TaskContract.TaskEntry.COLUMN_DUE_DATE + " ASC", null);
         res.moveToFirst();
         while (res.isAfterLast() == false) {
             Task task = new Task();
@@ -302,7 +303,7 @@ public class DBHelper extends SQLiteOpenHelper {
         Log.d(TAG, "in dbHelper, getUncompletedTasks()");
         ArrayList<Task> taskList = new ArrayList<Task>();
         SQLiteDatabase db = this.getReadableDatabase();
-        Cursor res = db.rawQuery( "SELECT * FROM " + TaskContract.TaskEntry.TABLE_NAME + " WHERE " + TaskContract.TaskEntry.COLUMN_COMPLETED + " = " + 0 + "", null);
+        Cursor res = db.rawQuery( "SELECT * FROM " + TaskContract.TaskEntry.TABLE_NAME + " WHERE " + TaskContract.TaskEntry.COLUMN_COMPLETED + " = " + 0 + " ORDER BY " + TaskContract.TaskEntry.COLUMN_DUE_DATE + " ASC", null);
         res.moveToFirst();
         while (res.isAfterLast() == false) {
             Task task = new Task();
@@ -315,7 +316,7 @@ public class DBHelper extends SQLiteOpenHelper {
             task.setLongitude(res.getDouble(res.getColumnIndex(TaskContract.TaskEntry.COLUMN_LONGITUDE)));
             task.setServerId(res.getInt(res.getColumnIndex(TaskContract.TaskEntry.COLUMN_SERVER_ID)));
             task.setId(res.getInt(res.getColumnIndex(TaskContract.TaskEntry._ID)));
-            
+
             int completed = res.getInt(res.getColumnIndex(TaskContract.TaskEntry.COLUMN_COMPLETED));
             Log.d(TAG, "task completion = " + completed);
 

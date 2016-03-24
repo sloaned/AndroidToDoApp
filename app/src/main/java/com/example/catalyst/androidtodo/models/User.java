@@ -1,6 +1,8 @@
 package com.example.catalyst.androidtodo.models;
 
-public class User {
+import java.io.Serializable;
+
+public class User implements Serializable {
 
     private int userId;
     private String username;
