@@ -39,8 +39,8 @@ public class ApiCaller {
     private static final String BASE_URL = "http://pc30120.catalystsolves.com:8080/";
 
     private Gson gson = new GsonBuilder().setDateFormat("yyyy-MM-dd'T'HH:mm:ssZ").create();
-    private OkHttpClient client = new OkHttpClient();
-    private SharedPreferences prefs;
+    private static OkHttpClient client = new OkHttpClient();
+    private static SharedPreferences prefs;
 
     private SharedPreferences.Editor mEditor;
     private Retrofit retrofit;
@@ -54,18 +54,23 @@ public class ApiCaller {
     private boolean loggedIn;
     private String userToken;
 
-   /* public ApiCaller() {
-       // prefs = PreferenceManager.getDefaultSharedPreferences(context);
-        //mEditor = prefs.edit();
+    public static OkHttpClient assignInterceptorWithToken() {
 
-        client = assignInterceptor();
+        final String token = prefs.getString(SharedPreferencesConstants.PREFS_TOKEN, (String) null);
+        Log.d(TAG, "before adding interceptor, token = " + token);
+        return client.newBuilder().addInterceptor(new Interceptor() {
+            @Override
+            public okhttp3.Response intercept(Chain chain) throws IOException {
+                Request original = chain.request();
 
-        retrofit = new Retrofit.Builder()
-                .baseUrl(BASE_URL)
-                .addConverterFactory(GsonConverterFactory.create(gson))
-                .client(client)
-                .build();
-    } */
+                Request request = original.newBuilder()
+                        .method(original.method(), original.body())
+                        .header("X-AUTH-TOKEN", token)
+                        .build();
+                return chain.proceed(request);
+            }
+        }).build();
+    }
 
     public ApiCaller(Context context) {
 
@@ -99,7 +104,7 @@ public class ApiCaller {
         }).build();
     }
 
-    public OkHttpClient assignInterceptorWithToken() {
+   /* public OkHttpClient assignInterceptorWithToken() {
 
         final String token = prefs.getString(SharedPreferencesConstants.PREFS_TOKEN, (String) null);
         Log.d(TAG, "before adding interceptor, token = " + token);
@@ -116,7 +121,7 @@ public class ApiCaller {
             }
         }).build();
     }
-
+*/
     public void getAllTasks() {
         HttpLoggingInterceptor logging = new HttpLoggingInterceptor();
         logging.setLevel(HttpLoggingInterceptor.Level.BODY);

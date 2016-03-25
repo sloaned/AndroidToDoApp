@@ -24,10 +24,11 @@ import android.widget.Toast;
 import com.example.catalyst.androidtodo.R;
 import com.example.catalyst.androidtodo.adapters.TaskAdapter;
 import com.example.catalyst.androidtodo.data.DBHelper;
-import com.example.catalyst.androidtodo.fragments.TaskFragment;
+import com.example.catalyst.androidtodo.data.TaskDBOperations;
 import com.example.catalyst.androidtodo.fragments.DividerItemDecoration;
 import com.example.catalyst.androidtodo.models.Participant;
 import com.example.catalyst.androidtodo.models.Task;
+import com.example.catalyst.androidtodo.network.ApiCaller;
 import com.example.catalyst.androidtodo.network.RetrofitInterfaces.ITask;
 import com.example.catalyst.androidtodo.util.JSONConstants;
 import com.example.catalyst.androidtodo.util.SharedPreferencesConstants;
@@ -54,7 +55,7 @@ import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 
-public class HomeActivity extends AppCompatActivity implements AccountManagerCallback<Bundle>, TaskFragment.getAllMethods {
+public class HomeActivity extends AppCompatActivity implements AccountManagerCallback<Bundle> {
 
     private final String TAG = getClass().getSimpleName();
 
@@ -73,6 +74,8 @@ public class HomeActivity extends AppCompatActivity implements AccountManagerCal
     private int tasksSyncedFromServer;
     private int tasksSyncedToServer;
 
+    private TaskDBOperations mTaskDBOperations;
+
     @Bind(R.id.taskRecyclerView)RecyclerView mTaskListView;
     @Bind(R.id.new_task_button)Button newTaskButton;
     @Bind(R.id.progressBar)ProgressBar mProgressBar;
@@ -85,12 +88,11 @@ public class HomeActivity extends AppCompatActivity implements AccountManagerCal
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_home);
 
-        //SQLiteDatabase taskDatabase = openOrCreateDatabase(TaskContract.DATABASE_NAME, MODE_PRIVATE, null);
-
         ButterKnife.bind(this);
 
         prefs = PreferenceManager.getDefaultSharedPreferences(this);
         mEditor = prefs.edit();
+        mTaskDBOperations = new TaskDBOperations(this);
 
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
@@ -139,19 +141,26 @@ public class HomeActivity extends AppCompatActivity implements AccountManagerCal
         mRefreshImageView.setVisibility(View.VISIBLE);
         mProgressBar.setVisibility(View.INVISIBLE);
 
-        getAllTasksFromServer();
+        getUncompletedTasks();
 
     }
 
-    @Override
     public void updateList() {
+        Log.d(TAG, "updating list!");
         getUncompletedTasks();
     }
 
     @Override
     public void onResume() {
         super.onResume();
+        updateList();
         Log.d(TAG, "resumed!");
+    }
+
+    @Override
+    public void onRestoreInstanceState(Bundle savedInstanceState) {
+        super.onRestoreInstanceState(savedInstanceState);
+        updateList();
     }
 
     @Override
@@ -199,138 +208,6 @@ public class HomeActivity extends AppCompatActivity implements AccountManagerCal
         }).start();
     }
 
-    public void getAllTasksFromServer() {
-
-        toggleRefresh();
-        mTasks.clear();
-
-        client = assignInterceptorWithToken();
-        retrofit = new Retrofit.Builder()
-                .baseUrl(BASE_URL)
-                .addConverterFactory(GsonConverterFactory.create(gson))
-                .client(client)
-                .build();
-
-
-        apiCaller = retrofit.create(ITask.class);
-        Call<ResponseBody> getTasks = apiCaller.getAllTasks();
-
-        getTasks.enqueue(new Callback<ResponseBody>() {
-            @Override
-            public void onResponse(Call<ResponseBody> call, retrofit2.Response<ResponseBody> response) {
-
-                try {
-
-                    String taskArray = response.body().string();
-                    Log.d(TAG, taskArray);
-
-                    try {
-                        JSONArray tasks = new JSONArray(taskArray);
-                        Log.d(TAG, taskArray);
-                        for (int i = 0; i < tasks.length(); i++) {
-                            JSONObject jsonTask = tasks.getJSONObject(i);
-                            Task task = new Task();
-                            if (!jsonTask.isNull(JSONConstants.JSON_TASK_ID)) {
-                                task.setServerId(jsonTask.getInt(JSONConstants.JSON_TASK_ID));
-                            }
-                            if (!jsonTask.isNull(JSONConstants.JSON_TASK_TITLE)) {
-                                task.setTaskTitle(jsonTask.getString(JSONConstants.JSON_TASK_TITLE));
-                            }
-                            if (!jsonTask.isNull(JSONConstants.JSON_TASK_DETAILS)) {
-                                task.setTaskDetails(jsonTask.getString(JSONConstants.JSON_TASK_DETAILS));
-                            }
-                            if (!jsonTask.isNull(JSONConstants.JSON_TASK_LONGITUDE)) {
-                                task.setLongitude(jsonTask.getDouble(JSONConstants.JSON_TASK_LONGITUDE));
-                            }
-                            if (!jsonTask.isNull(JSONConstants.JSON_TASK_LATITUDE)) {
-                                task.setLatitude(jsonTask.getDouble(JSONConstants.JSON_TASK_LATITUDE));
-                            }
-                            if (!jsonTask.isNull(JSONConstants.JSON_TASK_LOCATION)) {
-                                task.setLocationName(jsonTask.getString(JSONConstants.JSON_TASK_LOCATION));
-                            }
-                            if (!jsonTask.isNull(JSONConstants.JSON_TASK_DUE_DATE)) {
-                                Log.d(TAG, "due date back from server, due date = " + jsonTask.getString(JSONConstants.JSON_TASK_DUE_DATE));
-                                task.setDueDate(jsonTask.getLong(JSONConstants.JSON_TASK_DUE_DATE));
-                            }
-                            if (!jsonTask.isNull(JSONConstants.JSON_TASK_TIMEZONE)) {
-                                task.setTimeZone(jsonTask.getString(JSONConstants.JSON_TASK_TIMEZONE));
-                            }
-                            if (!jsonTask.isNull(JSONConstants.JSON_TASK_COMPLETED)) {
-                                task.setCompleted(jsonTask.getBoolean(JSONConstants.JSON_TASK_COMPLETED));
-                            }
-                            if (!jsonTask.isNull(JSONConstants.JSON_TASK_PARTICIPANTS)) {
-                                JSONArray participantsArray = jsonTask.getJSONArray(JSONConstants.JSON_TASK_PARTICIPANTS);
-                                List<Participant> participants = new ArrayList<Participant>();
-                                for (int j = 0; j < participantsArray.length(); j++) {
-                                    JSONObject participantObj = participantsArray.getJSONObject(j);
-                                    String name = participantObj.getString(JSONConstants.JSON_TASK_PARTICIPANT_NAME);
-                                    Participant participant = new Participant();
-                                    participant.setParticipantName(name);
-                                    participants.add(participant);
-                                }
-                                task.setParticipants(participants);
-                            }
-
-                            if (!task.isCompleted()) {
-                                mTasks.add(task);
-                            }
-
-                            DBHelper dbHelper = new DBHelper(HomeActivity.this);
-                            if (dbHelper.doesTaskExist(task.getServerId())) {
-                                updateTaskLocally(task);
-                            } else {
-                                addTaskToLocalDatabase(task);
-                            }
-                            dbHelper.close();
-
-                        }
-
-                        runOnUiThread(new Runnable() {
-                            @Override
-                            public void run() {
-                                adapter.notifyDataSetChanged();
-                                toggleRefresh();
-                            }
-                        });
-
-                    } catch (JSONException e) {
-                        e.printStackTrace();
-                    }
-
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-                for (String head : response.headers().names()) {
-                    Log.v(TAG, head + " " + response.headers().values(head));
-                }
-
-            }
-
-            @Override
-            public void onFailure(Call<ResponseBody> call, Throwable t) {
-                Log.e(TAG, "Error: " + t.toString());
-            }
-        });
-    }
-
-    private OkHttpClient assignInterceptorWithToken() {
-
-        final String token = prefs.getString(SharedPreferencesConstants.PREFS_TOKEN, (String) null);
-        Log.d(TAG, "before adding interceptor, token = " + token);
-        return client.newBuilder().addInterceptor(new Interceptor() {
-            @Override
-            public okhttp3.Response intercept(Chain chain) throws IOException {
-                Request original = chain.request();
-
-                Request request = original.newBuilder()
-                        .method(original.method(), original.body())
-                        .header("X-AUTH-TOKEN", token)
-                        .build();
-                return chain.proceed(request);
-            }
-        }).build();
-    }
-
     public void deleteTaskLocally(int id) {
         DBHelper dbHelper = new DBHelper(this);
         dbHelper.deleteTask(id);
@@ -338,7 +215,7 @@ public class HomeActivity extends AppCompatActivity implements AccountManagerCal
     }
 
     public void deleteTaskFromServer(final int serverId, final int localId) {
-        client = assignInterceptorWithToken();
+        client = new ApiCaller(this).assignInterceptorWithToken();
         retrofit = new Retrofit.Builder()
                 .baseUrl(BASE_URL)
                 .addConverterFactory(GsonConverterFactory.create(gson))
@@ -389,7 +266,9 @@ public class HomeActivity extends AppCompatActivity implements AccountManagerCal
         intent.putExtra("Task", task);
 
         startActivity(intent);
-        getUncompletedTasks();
+
+        updateList();
+        //getUncompletedTasks();
     }
 
     private void toggleRefresh() {
@@ -419,7 +298,7 @@ public class HomeActivity extends AppCompatActivity implements AccountManagerCal
 
         // get tasks from server first
 
-        client = assignInterceptorWithToken();
+        client = new ApiCaller(this).assignInterceptorWithToken();
         retrofit = new Retrofit.Builder()
                 .baseUrl(BASE_URL)
                 .addConverterFactory(GsonConverterFactory.create(gson))
@@ -497,9 +376,9 @@ public class HomeActivity extends AppCompatActivity implements AccountManagerCal
 
                             DBHelper dbHelper = new DBHelper(HomeActivity.this);
                             if (dbHelper.doesTaskExist(task.getServerId())) {
-                                updateTaskLocally(task);
+                                mTaskDBOperations.updateTaskLocally(task);
                             } else {
-                                addTaskToLocalDatabase(task);
+                                mTaskDBOperations.addTaskToLocalDatabase(task);
                             }
                             dbHelper.close();
                         }
@@ -510,9 +389,6 @@ public class HomeActivity extends AppCompatActivity implements AccountManagerCal
 
                 } catch (IOException e) {
                     e.printStackTrace();
-                }
-                for (String head : response.headers().names()) {
-                    Log.v(TAG, head + " " + response.headers().values(head));
                 }
 
             }
@@ -528,25 +404,16 @@ public class HomeActivity extends AppCompatActivity implements AccountManagerCal
 
         Log.d(TAG, "now sending unsynched tasks to the server");
 
-        ArrayList<Task> unsyncedTasks = getLocalUnsynchedTasks();
+        ArrayList<Task> unsyncedTasks = mTaskDBOperations.getLocalUnsynchedTasks();
         tasksSyncedToServer = unsyncedTasks.size();
         for (Task task : unsyncedTasks) {
             Log.d(TAG, task.getTaskTitle());
             if (task.getServerId() < 1) {
                 addTaskToServerDatabase(task);
             } else {
+                task.setId(task.getServerId());
                 updateTaskOnServer(task);
             }
-        }
-
-        // call local database to show all tasks
-
-        getUncompletedTasks();
-
-
-        Log.d(TAG, "Tasks have been synched. now mTasks contains: ");
-        for (Task task : mTasks) {
-            Log.v(TAG, task.getTaskTitle());
         }
 
         String message = "Sync successful. " + tasksSyncedToServer + " tasks uploaded to server, " +
@@ -554,41 +421,17 @@ public class HomeActivity extends AppCompatActivity implements AccountManagerCal
         Log.d(TAG, "message = " + message);
         Toast.makeText(this, message, Toast.LENGTH_LONG).show();
 
-    }
+        // call local database to show all tasks
 
-    public void addTaskToLocalDatabase(Task task) {
-        DBHelper dbHelper = new DBHelper(this);
-        dbHelper.addTask(task);
-        dbHelper.close();
-    }
+        updateList();
 
-    public void updateTaskLocally(Task task) {
-        DBHelper dbHelper = new DBHelper(this);
-        dbHelper.updateTask(task);
-        dbHelper.close();
-    }
 
-    public ArrayList<Task> getLocalUnsynchedTasks() {
-        DBHelper dbHelper = new DBHelper(this);
-        ArrayList<Task> tasks = dbHelper.getUnsynchedTasks();
-        dbHelper.close();
-        return tasks;
-    }
-/*
-    public void getAllTasksLocally() {
-        Log.v(TAG, "getAllTasksLocally()");
-        toggleRefresh();
-        mTasks.clear();
-        DBHelper dbHelper = new DBHelper(this);
-        ArrayList<Task> tasks = dbHelper.getAllTasks();
-        for (Task task : tasks) {
-            Log.d(TAG, task.getTaskTitle());
-            mTasks.add(task);
+        Log.d(TAG, "Tasks have been synched. now mTasks contains: ");
+        for (Task task : mTasks) {
+            Log.v(TAG, task.getTaskTitle());
         }
-        dbHelper.close();
-        toggleRefresh();
-        adapter.notifyDataSetChanged();
-    } */
+
+    }
 
     public void getCompletedTasks() {
         if (viewUncompletedTasksButton.getVisibility() == View.GONE) {
@@ -630,7 +473,7 @@ public class HomeActivity extends AppCompatActivity implements AccountManagerCal
 
 
     public void addTaskToServerDatabase(Task task) {
-        client = assignInterceptorWithToken();
+        client = new ApiCaller(this).assignInterceptorWithToken();
         retrofit = new Retrofit.Builder()
                 .baseUrl(BASE_URL)
                 .addConverterFactory(GsonConverterFactory.create(gson))
@@ -656,7 +499,7 @@ public class HomeActivity extends AppCompatActivity implements AccountManagerCal
 
 
     public void updateTaskOnServer(Task task) {
-        client = assignInterceptorWithToken();
+        client = new ApiCaller(this).assignInterceptorWithToken();
         retrofit = new Retrofit.Builder()
                 .baseUrl(BASE_URL)
                 .addConverterFactory(GsonConverterFactory.create(gson))
@@ -680,6 +523,5 @@ public class HomeActivity extends AppCompatActivity implements AccountManagerCal
             }
         });
     }
-
 
 }

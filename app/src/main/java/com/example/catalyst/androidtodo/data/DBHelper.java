@@ -281,8 +281,8 @@ public class DBHelper extends SQLiteOpenHelper {
             task.setLongitude(res.getDouble(res.getColumnIndex(TaskContract.TaskEntry.COLUMN_LONGITUDE)));
             task.setServerId(res.getInt(res.getColumnIndex(TaskContract.TaskEntry.COLUMN_SERVER_ID)));
             task.setId(res.getInt(res.getColumnIndex(TaskContract.TaskEntry._ID)));
-            int completed = res.getInt(res.getColumnIndex(TaskContract.TaskEntry.COLUMN_COMPLETED));
-            Log.d(TAG, "task completion = " + completed);
+            //int completed = res.getInt(res.getColumnIndex(TaskContract.TaskEntry.COLUMN_COMPLETED));
+            Log.d(TAG, "task's server id = " + task.getServerId());
             task.setCompleted(true);
 
 
@@ -317,9 +317,7 @@ public class DBHelper extends SQLiteOpenHelper {
             task.setServerId(res.getInt(res.getColumnIndex(TaskContract.TaskEntry.COLUMN_SERVER_ID)));
             task.setId(res.getInt(res.getColumnIndex(TaskContract.TaskEntry._ID)));
 
-            int completed = res.getInt(res.getColumnIndex(TaskContract.TaskEntry.COLUMN_COMPLETED));
-            Log.d(TAG, "task completion = " + completed);
-
+            Log.d(TAG, "task's server id = " + task.getServerId());
             task.setCompleted(false);
 
 

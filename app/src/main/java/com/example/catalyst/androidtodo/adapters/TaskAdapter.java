@@ -149,6 +149,8 @@ public class TaskAdapter extends RecyclerSwipeAdapter<TaskAdapter.TaskViewHolder
 
             if (task.getTaskDetails() != null && !task.getTaskDetails().equals(null) && !task.getTaskDetails().equals("")) {
                 mTaskDetailsText.setText(task.getTaskDetails());
+            } else {
+                mTaskDetailsText.setText("");
             }
 
             if (task.getLocationName() != null && !task.getLocationName().equals(null) && !task.getLocationName().equals("")) {
@@ -173,16 +175,6 @@ public class TaskAdapter extends RecyclerSwipeAdapter<TaskAdapter.TaskViewHolder
 
 
         }
-        /*
-        @Override
-        public void onClick(View v) {
-            String taskName = mTaskNameText.getText().toString();
-
-            Toast.makeText(mContext, taskName, Toast.LENGTH_SHORT).show();
-        } */
     }
-
-
-
 
 }

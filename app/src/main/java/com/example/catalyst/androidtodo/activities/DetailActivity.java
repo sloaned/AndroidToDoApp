@@ -34,9 +34,9 @@ import android.widget.TimePicker;
 import com.example.catalyst.androidtodo.R;
 import com.example.catalyst.androidtodo.activities.HomeActivity;
 import com.example.catalyst.androidtodo.data.DBHelper;
+import com.example.catalyst.androidtodo.data.TaskDBOperations;
 import com.example.catalyst.androidtodo.fragments.ContactFragment;
 import com.example.catalyst.androidtodo.fragments.MapPickerFragment;
-import com.example.catalyst.androidtodo.fragments.TaskFragment;
 import com.example.catalyst.androidtodo.models.Participant;
 import com.example.catalyst.androidtodo.models.Task;
 import com.example.catalyst.androidtodo.network.RetrofitInterfaces.ITask;
@@ -71,7 +71,7 @@ import retrofit2.Retrofit;
  */
 public class DetailActivity extends AppCompatActivity implements ContactFragment.ContactClickListener {
 
-    public static final String TAG = TaskFragment.class.getSimpleName();
+    public static final String TAG = DetailActivity.class.getSimpleName();
 
     private static final String BASE_URL = "http://pc30120.catalystsolves.com:8080/";
 
@@ -82,15 +82,12 @@ public class DetailActivity extends AppCompatActivity implements ContactFragment
     private Gson gson = new GsonBuilder().setDateFormat("yyyy-MM-dd'T'HH:mm:ssZ").create();
     private OkHttpClient client = new OkHttpClient();
     private SharedPreferences prefs;
-
-    private Context context;
+   // private TaskDBOperations mTaskDBOperations;
 
     private SharedPreferences.Editor mEditor;
     private Retrofit retrofit;
 
     private ITask apiCaller;
-
-    private View addTaskView;
 
     @Bind(R.id.newTaskTitleValue)EditText taskTitleView;
     @Bind(R.id.newTaskDetailsValue)EditText taskDetailView;
@@ -131,6 +128,8 @@ public class DetailActivity extends AppCompatActivity implements ContactFragment
 
         super.onCreate(savedInstanceState);
         setContentView(R.layout.add_new_task);
+
+        //mTaskDBOperations = new TaskDBOperations(this);
 
         Intent intent = getIntent();
         if (intent != null && intent.hasExtra("Task") && intent.getSerializableExtra("Task") != null) {
@@ -227,7 +226,7 @@ public class DetailActivity extends AppCompatActivity implements ContactFragment
                 int mm = calendar.get(Calendar.MONTH);
                 int dd = calendar .get(Calendar.DAY_OF_MONTH);
 
-                DatePickerDialog datePicker = new DatePickerDialog(context, new DatePickerDialog.OnDateSetListener() {
+                DatePickerDialog datePicker = new DatePickerDialog(DetailActivity.this, new DatePickerDialog.OnDateSetListener() {
                     @Override
                     public void onDateSet(DatePicker view, int year, int monthOfYear, int dayOfMonth) {
 
@@ -262,7 +261,7 @@ public class DetailActivity extends AppCompatActivity implements ContactFragment
 
                 int hh = calendar.get(Calendar.HOUR_OF_DAY);
                 int mm = calendar.get(Calendar.MINUTE);
-                TimePickerDialog timePicker = new TimePickerDialog(context, new TimePickerDialog.OnTimeSetListener() {
+                TimePickerDialog timePicker = new TimePickerDialog(DetailActivity.this, new TimePickerDialog.OnTimeSetListener() {
                     @Override
                     public void onTimeSet(TimePicker view, int hour, int minute) {
                         long milliSeconds = (hour * 3600 * 1000) + (minute * 60 * 1000);
@@ -351,7 +350,7 @@ public class DetailActivity extends AppCompatActivity implements ContactFragment
                         Log.d(TAG, "participantNumber = " + participantNumber);
 
                         for (int i = 0; i < participantNumber; i++) {
-                            EditText editText = (EditText) addTaskView.findViewById(i);
+                            EditText editText = (EditText)findViewById(i);
                             String taskParticipant = editText.getText().toString();
                             Log.d(TAG, "participant name = " + taskParticipant);
 
@@ -418,15 +417,29 @@ public class DetailActivity extends AppCompatActivity implements ContactFragment
                     }
                 }
 
-                finish();
             }
         });
 
     }
 
+    public void addTaskToLocalDatabase() {
+        DBHelper dbHelper = new DBHelper(this);
+        dbHelper.addTask(task);
+        dbHelper.close();
+        updateList();
+    }
 
+    public void updateTaskLocally() {
+        DBHelper dbHelper = new DBHelper(this);
+        dbHelper.updateTask(task);
+        dbHelper.close();
+        updateList();
+
+    }
+
+/*
     private OkHttpClient assignInterceptorWithToken() {
-        prefs = PreferenceManager.getDefaultSharedPreferences(context);
+        prefs = PreferenceManager.getDefaultSharedPreferences(this);
 
         final String token = prefs.getString(SharedPreferencesConstants.PREFS_TOKEN, (String) null);
         return client.newBuilder().addInterceptor(new Interceptor() {
@@ -441,7 +454,7 @@ public class DetailActivity extends AppCompatActivity implements ContactFragment
                 return chain.proceed(request);
             }
         }).build();
-    }
+    } */
 
     public interface OnFragmentInteractionListener {
         void onFragmentInteraction(Uri uri);
@@ -469,6 +482,7 @@ public class DetailActivity extends AppCompatActivity implements ContactFragment
                         task.setSyncDate(0);
                         task.setServerId(0);
                         addTaskToLocalDatabase();
+
                     } else {
                         updateTaskLocally();
                     }
@@ -535,6 +549,15 @@ public class DetailActivity extends AppCompatActivity implements ContactFragment
 
     }
 
+    private void updateList() {
+
+        Log.d(TAG, "parent = " + getParent());
+        if (getParent() instanceof HomeActivity) {
+            ((HomeActivity) getParent()).updateList();
+        }
+        finish();
+    }
+
 
 
     public void getLocationTimezone(String lat, String lng) {
@@ -576,6 +599,7 @@ public class DetailActivity extends AppCompatActivity implements ContactFragment
                             task.setSyncDate(0);
                             task.setServerId(0);
                             addTaskToLocalDatabase();
+
                         } else {
                             Log.d(TAG, "updating the task");
                             updateTaskLocally();
@@ -609,34 +633,13 @@ public class DetailActivity extends AppCompatActivity implements ContactFragment
         }
     }
 
-
-    public void onDateButtonClicked(View v) {
-        final Calendar calendar = Calendar.getInstance();
-        int yy = calendar.get(Calendar.YEAR);
-        int mm = calendar.get(Calendar.MONTH);
-        int dd = calendar .get(Calendar.DAY_OF_MONTH);
-
-        DatePickerDialog datePicker = new DatePickerDialog(context, new DatePickerDialog.OnDateSetListener() {
-            @Override
-            public void onDateSet(DatePicker view, int year, int monthOfYear, int dayOfMonth) {
-                String date = String.valueOf(monthOfYear+1) + "/" + String.valueOf(dayOfMonth)
-                        + "/" + String.valueOf(year);
-                TextView dateView = (TextView) addTaskView.findViewById(R.id.newTaskDateValue);
-                dateView.setText(date);
-            }
-        }, yy, mm, dd);
-        datePicker.show();
-        //DialogFragment newFragment = new DatePickerFragment();
-        //newFragment.show(getFragmentManager(), "Date Picker");
-    }
-
     public void updateDate(String date) {
-        TextView dateView = (TextView) addTaskView.findViewById(R.id.newTaskDateValue);
+        TextView dateView = (TextView)findViewById(R.id.newTaskDateValue);
         dateView.setText(date);
     }
 
     public void updateTime(String time) {
-        TextView timeView = (TextView) addTaskView.findViewById(R.id.newTaskTimeValue);
+        TextView timeView = (TextView)findViewById(R.id.newTaskTimeValue);
         timeView.setText(time);
     }
 
@@ -651,15 +654,15 @@ public class DetailActivity extends AppCompatActivity implements ContactFragment
     }
 
     public void addParticipantView(String name) {
-        final LinearLayout layout = new LinearLayout(context);
+        final LinearLayout layout = new LinearLayout(this);
 
         final ArrayList<String> participantMatches = getContactList();
         layout.setLayoutParams(new ActionBar.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
         layout.setOrientation(LinearLayout.HORIZONTAL);
         layout.setGravity(Gravity.CENTER_VERTICAL);
 
-        final ArrayAdapter<String> adapter = new ArrayAdapter<String>(context, android.R.layout.simple_dropdown_item_1line, participantMatches);
-        final AutoCompleteTextView editText = new AutoCompleteTextView(context);
+        final ArrayAdapter<String> adapter = new ArrayAdapter<String>(this, android.R.layout.simple_dropdown_item_1line, participantMatches);
+        final AutoCompleteTextView editText = new AutoCompleteTextView(this);
         editText.setAdapter(adapter);
         editText.setLayoutParams(new ActionBar.LayoutParams(
                 ActionBar.LayoutParams.WRAP_CONTENT,
@@ -670,7 +673,7 @@ public class DetailActivity extends AppCompatActivity implements ContactFragment
         editText.setText(name);
         editText.setId(participantNumber);
 
-        final Button contactButton = new Button(context);
+        final Button contactButton = new Button(this);
         contactButton.setLayoutParams(new ActionBar.LayoutParams(70, 70));
         contactButton.setGravity(View.TEXT_ALIGNMENT_GRAVITY);
         contactButton.setTextSize(12);
@@ -686,12 +689,11 @@ public class DetailActivity extends AppCompatActivity implements ContactFragment
                 if (dialog.getDialog() != null) {
                     dialog.getDialog().setCanceledOnTouchOutside(true);
                 }
-                /*dialog.setTargetFragment(DetailActivity.this, 0);
-                dialog.show(getFragmentManager(), "dialog"); */
+
             }
         });
 
-        final Button button = new Button(context);
+        final Button button = new Button(this);
         button.setLayoutParams(new ActionBar.LayoutParams(45, 45));
         button.setGravity(Gravity.CENTER_VERTICAL);
         button.setBackgroundResource(R.drawable.clearx);
@@ -708,9 +710,9 @@ public class DetailActivity extends AppCompatActivity implements ContactFragment
 
                 for (int i = id + 1; i < participantNumber; i++) {
 
-                    EditText editText1 = (EditText) addTaskView.findViewById(i);
+                    EditText editText1 = (EditText)findViewById(i);
                     editText1.setId(i - 1);
-                    Button button1 = (Button) addTaskView.findViewById(i + R.string.remove_participant);
+                    Button button1 = (Button)findViewById(i + R.string.remove_participant);
                     button1.setId((i - 1) + R.string.remove_participant);
                 }
                 participantNumber--;
@@ -725,7 +727,7 @@ public class DetailActivity extends AppCompatActivity implements ContactFragment
         layout.addView(button);
 
         taskParticipantLayout.addView(layout);
-        final ScrollView scrollView = (ScrollView) addTaskView.findViewById(R.id.scrollView);
+        final ScrollView scrollView = (ScrollView)findViewById(R.id.scrollView);
         scrollView.post(new Runnable() {
             @Override
             public void run() {
@@ -736,7 +738,7 @@ public class DetailActivity extends AppCompatActivity implements ContactFragment
 
     @Override
     public void assignParticipant(String name, int id) {
-        AutoCompleteTextView editText = (AutoCompleteTextView) addTaskView.findViewById(id);
+        AutoCompleteTextView editText = (AutoCompleteTextView)findViewById(id);
         editText.setText(name);
     }
 
@@ -748,7 +750,7 @@ public class DetailActivity extends AppCompatActivity implements ContactFragment
         Cursor phones = null;
 
         try {
-            phones = context.getContentResolver().query(ContactsContract.Data.CONTENT_URI, ContactsConstants.PROJECTION, null, null, null);
+            phones = this.getContentResolver().query(ContactsContract.Data.CONTENT_URI, ContactsConstants.PROJECTION, null, null, null);
 
             if (phones.moveToFirst()) {
                 Log.d(TAG, "got something in phones");
@@ -771,58 +773,4 @@ public class DetailActivity extends AppCompatActivity implements ContactFragment
 
         return contacts;
     }
-
-
-    public ArrayList<String> searchContactList(String searchTerm) {
-        searchTerm = "%" + searchTerm + "%";
-        String[] selectionArgs = {searchTerm};
-
-        ArrayList<String> contacts = new ArrayList<String>();
-
-        Cursor phones = null;
-
-        try {
-            phones = context.getContentResolver().query(ContactsContract.Data.CONTENT_URI, ContactsConstants.PROJECTION, ContactsConstants.SEARCH_SELECTION, selectionArgs, null);
-
-            if (phones.moveToFirst()) {
-                Log.d(TAG, "got something in phones");
-                do {
-                    String name = phones.getString(phones.getColumnIndex(ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME));
-
-                    contacts.add(name);
-                } while (phones.moveToNext());
-            } else {
-                Log.d(TAG, "didn't get nuthin");
-            }
-            phones.close();
-        } catch (Exception e) {
-            Log.e(TAG, e.getMessage());
-        } finally {
-            if (phones != null) {
-                phones.close();
-            }
-        }
-
-        return contacts;
-    }
-
-
-
-
-
-    public void addTaskToLocalDatabase() {
-        DBHelper dbHelper = new DBHelper(this);
-        dbHelper.addTask(task);
-        dbHelper.close();
-
-    }
-
-    public void updateTaskLocally() {
-        DBHelper dbHelper = new DBHelper(this);
-        Log.d(TAG, "updating task. Completed? : " + task.isCompleted());
-        dbHelper.updateTask(task);
-        dbHelper.close();
-
-    }
-
 }
