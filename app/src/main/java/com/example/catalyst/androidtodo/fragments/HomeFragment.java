@@ -1,33 +1,34 @@
-package com.example.catalyst.androidtodo.activities;
+package com.example.catalyst.androidtodo.fragments;
 
 import android.accounts.AccountManager;
 import android.accounts.AccountManagerCallback;
 import android.accounts.AccountManagerFuture;
-import android.app.FragmentTransaction;
+import android.app.AlertDialog;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
-import android.support.v4.app.DialogFragment;
-import android.support.v7.app.AppCompatActivity;
+import android.support.v4.app.Fragment;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.Toast;
 
 import com.example.catalyst.androidtodo.R;
+import com.example.catalyst.androidtodo.activities.DetailActivity;
+import com.example.catalyst.androidtodo.activities.LoginActivity;
 import com.example.catalyst.androidtodo.adapters.TaskAdapter;
 import com.example.catalyst.androidtodo.data.DBHelper;
 import com.example.catalyst.androidtodo.data.TaskDBOperations;
-import com.example.catalyst.androidtodo.fragments.DividerItemDecoration;
-import com.example.catalyst.androidtodo.fragments.TaskFragment;
 import com.example.catalyst.androidtodo.models.Participant;
 import com.example.catalyst.androidtodo.models.Task;
 import com.example.catalyst.androidtodo.network.ApiCaller;
@@ -43,13 +44,12 @@ import org.json.JSONObject;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 import butterknife.Bind;
 import butterknife.ButterKnife;
-import okhttp3.Interceptor;
 import okhttp3.OkHttpClient;
-import okhttp3.Request;
 import okhttp3.ResponseBody;
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -57,7 +57,10 @@ import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 
-public class HomeActivity extends AppCompatActivity/* implements AccountManagerCallback<Bundle> */{
+/**
+ * Created by dsloane on 3/25/2016.
+ */
+public class HomeFragment extends Fragment implements AccountManagerCallback<Bundle> {
 
     private final String TAG = getClass().getSimpleName();
 
@@ -86,30 +89,31 @@ public class HomeActivity extends AppCompatActivity/* implements AccountManagerC
     @Bind(R.id.viewUncompletedTasksButton)Button viewUncompletedTasksButton;
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_home);
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+        //super.onCreate(savedInstanceState);
+        //setContentView(R.layout.activity_home);
 
-        ButterKnife.bind(this);
 
-        prefs = PreferenceManager.getDefaultSharedPreferences(this);
+        final View homeView = inflater.inflate(R.layout.content_home, null);
+
+        ButterKnife.bind(this, homeView);
+
+        prefs = PreferenceManager.getDefaultSharedPreferences(getActivity());
         mEditor = prefs.edit();
-        mTaskDBOperations = new TaskDBOperations(this);
+        mTaskDBOperations = new TaskDBOperations(getActivity());
 
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
-        adapter = new TaskAdapter(this, mTasks);
+        //Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        //setSupportActionBar(toolbar);
+        adapter = new TaskAdapter(getActivity(), mTasks);
 
         mTaskListView.setAdapter(adapter);
-        RecyclerView.LayoutManager layoutManager = new LinearLayoutManager(this);
+        RecyclerView.LayoutManager layoutManager = new LinearLayoutManager(getActivity());
         mTaskListView.setLayoutManager(layoutManager);
-
-        mTaskListView.addItemDecoration(new DividerItemDecoration(this, DividerItemDecoration.VERTICAL_LIST));
-
+        mTaskListView.addItemDecoration(new DividerItemDecoration(getActivity(), DividerItemDecoration.VERTICAL_LIST));
         mTaskListView.setHasFixedSize(true);
 
         viewUncompletedTasksButton.setVisibility(View.GONE);
-/*
+
         newTaskButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -121,7 +125,6 @@ public class HomeActivity extends AppCompatActivity/* implements AccountManagerC
             @Override
             public void onClick(View v) {
                 getCompletedTasks();
-                //toggleButtons();
             }
         });
 
@@ -129,7 +132,6 @@ public class HomeActivity extends AppCompatActivity/* implements AccountManagerC
             @Override
             public void onClick(View v) {
                 getUncompletedTasks();
-                // toggleButtons();
             }
         });
 
@@ -138,18 +140,29 @@ public class HomeActivity extends AppCompatActivity/* implements AccountManagerC
             public void onClick(View v) {
                 syncTasks();
             }
-        });  */
+        });
 
         mRefreshImageView.setVisibility(View.VISIBLE);
         mProgressBar.setVisibility(View.INVISIBLE);
-        /*
-        getUncompletedTasks(); */
 
+        getUncompletedTasks();
+
+
+        return homeView;
+    }
+
+    public static HomeFragment newInstance() {
+
+        HomeFragment fragment = new HomeFragment();
+        Bundle args = new Bundle();
+
+        fragment.setArguments(args);
+        return fragment;
     }
 
     public void updateList() {
         Log.d(TAG, "updating list!");
-        //getUncompletedTasks();
+        getUncompletedTasks();
     }
 
     @Override
@@ -160,59 +173,10 @@ public class HomeActivity extends AppCompatActivity/* implements AccountManagerC
     }
 
     @Override
-    public void onRestoreInstanceState(Bundle savedInstanceState) {
-        super.onRestoreInstanceState(savedInstanceState);
-        updateList();
-    }
-
-    @Override
     public void onPause() {
         Log.d(TAG, "paused!");
         super.onPause();
     }
-
-
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.menu_main, menu);
-        return true;
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        int id = item.getItemId();
-
-        if (id == R.id.action_logout) {
-            mEditor.putString(SharedPreferencesConstants.PREFS_TOKEN, null).apply();
-            Intent intent = new Intent(this, LoginActivity.class);
-            startActivity(intent);
-            return true;
-        }
-
-        return super.onOptionsItemSelected(item);
-    }
-/*
-    public void showTask(Task task) {
-
-
-
-        TaskFragment fragment = (TaskFragment) getFragmentManager().findFragmentById(R.layout.add_new_task);
-
-        if (fragment != null) {
-            Log.d(TAG, "fragment wasn't null");
-            fragment.updateView(task);
-        } else {
-            TaskFragment taskFragment = TaskFragment.newInstance(task);
-
-            FragmentTransaction transaction = getFragmentManager().beginTransaction();
-
-            transaction.replace(R.id.fragment_container, taskFragment);
-            transaction.addToBackStack(null);
-            transaction.commit();
-        }
-    }
-
-
 
 
     @Override
@@ -234,13 +198,13 @@ public class HomeActivity extends AppCompatActivity/* implements AccountManagerC
     }
 
     public void deleteTaskLocally(int id) {
-        DBHelper dbHelper = new DBHelper(this);
+        DBHelper dbHelper = new DBHelper(getActivity());
         dbHelper.deleteTask(id);
         dbHelper.close();
     }
 
     public void deleteTaskFromServer(final int serverId, final int localId) {
-        client = new ApiCaller(this).assignInterceptorWithToken();
+        client = new ApiCaller(getActivity()).assignInterceptorWithToken();
         retrofit = new Retrofit.Builder()
                 .baseUrl(BASE_URL)
                 .addConverterFactory(GsonConverterFactory.create(gson))
@@ -255,7 +219,7 @@ public class HomeActivity extends AppCompatActivity/* implements AccountManagerC
                 int position = getTaskPosition(localId);
                 if (position > -1) {
                     mTasks.remove(position);
-                    runOnUiThread(new Runnable() {
+                    getActivity().runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
                             adapter.notifyDataSetChanged();
@@ -264,7 +228,6 @@ public class HomeActivity extends AppCompatActivity/* implements AccountManagerC
                 }
 
                 deleteTaskLocally(localId);
-
             }
 
             @Override
@@ -283,6 +246,13 @@ public class HomeActivity extends AppCompatActivity/* implements AccountManagerC
         return -1;
     }
 
+    public void showTask(Task task) {
+
+        Intent intent = new Intent(getActivity(), DetailActivity.class);
+        intent.putExtra("Task", task);
+        startActivity(intent);
+        updateList();
+    }
 
     private void toggleRefresh() {
         if (mProgressBar.getVisibility() == View.INVISIBLE) {
@@ -311,7 +281,7 @@ public class HomeActivity extends AppCompatActivity/* implements AccountManagerC
 
         // get tasks from server first
 
-        client = new ApiCaller(this).assignInterceptorWithToken();
+        client = new ApiCaller(getActivity()).assignInterceptorWithToken();
         retrofit = new Retrofit.Builder()
                 .baseUrl(BASE_URL)
                 .addConverterFactory(GsonConverterFactory.create(gson))
@@ -370,8 +340,6 @@ public class HomeActivity extends AppCompatActivity/* implements AccountManagerC
                             if (!jsonTask.isNull(JSONConstants.JSON_TASK_COMPLETED)) {
                                 task.setCompleted(jsonTask.getBoolean(JSONConstants.JSON_TASK_COMPLETED));
                             }
-
-
                             if (!jsonTask.isNull(JSONConstants.JSON_TASK_PARTICIPANTS)) {
                                 JSONArray participantsArray = jsonTask.getJSONArray(JSONConstants.JSON_TASK_PARTICIPANTS);
                                 List<Participant> participants = new ArrayList<Participant>();
@@ -387,7 +355,7 @@ public class HomeActivity extends AppCompatActivity/* implements AccountManagerC
 
                             // update tasks locally
 
-                            DBHelper dbHelper = new DBHelper(HomeActivity.this);
+                            DBHelper dbHelper = new DBHelper(getActivity());
                             if (dbHelper.doesTaskExist(task.getServerId())) {
                                 mTaskDBOperations.updateTaskLocally(task);
                             } else {
@@ -412,14 +380,19 @@ public class HomeActivity extends AppCompatActivity/* implements AccountManagerC
             }
         });
 
-
         // send local unsynched tasks to server
 
         Log.d(TAG, "now sending unsynched tasks to the server");
 
         ArrayList<Task> unsyncedTasks = mTaskDBOperations.getLocalUnsynchedTasks();
         tasksSyncedToServer = unsyncedTasks.size();
+
+        Date date = new Date();
+        long ms = date.getTime();
+
         for (Task task : unsyncedTasks) {
+
+            task.setSyncDate(ms);
             Log.d(TAG, task.getTaskTitle());
             if (task.getServerId() < 1) {
                 addTaskToServerDatabase(task);
@@ -432,18 +405,15 @@ public class HomeActivity extends AppCompatActivity/* implements AccountManagerC
         String message = "Sync successful. " + tasksSyncedToServer + " tasks uploaded to server, " +
                 tasksSyncedFromServer + " tasks imported from server";
         Log.d(TAG, "message = " + message);
-        Toast.makeText(this, message, Toast.LENGTH_LONG).show();
+        Toast.makeText(getActivity(), message, Toast.LENGTH_LONG).show();
 
         // call local database to show all tasks
-
         updateList();
-
 
         Log.d(TAG, "Tasks have been synched. now mTasks contains: ");
         for (Task task : mTasks) {
             Log.v(TAG, task.getTaskTitle());
         }
-
     }
 
     public void getCompletedTasks() {
@@ -454,7 +424,7 @@ public class HomeActivity extends AppCompatActivity/* implements AccountManagerC
         Log.v(TAG, "getCompletedTasks()");
         toggleRefresh();
         mTasks.clear();
-        DBHelper dbHelper = new DBHelper(this);
+        DBHelper dbHelper = new DBHelper(getActivity());
         ArrayList<Task> tasks = dbHelper.getCompletedTasks();
         for (Task task : tasks) {
             Log.d(TAG, task.getTaskTitle());
@@ -473,7 +443,7 @@ public class HomeActivity extends AppCompatActivity/* implements AccountManagerC
         Log.v(TAG, "getUncompletedTasks()");
         toggleRefresh();
         mTasks.clear();
-        DBHelper dbHelper = new DBHelper(this);
+        DBHelper dbHelper = new DBHelper(getActivity());
         ArrayList<Task> tasks = dbHelper.getUncompletedTasks();
         for (Task task : tasks) {
             Log.d(TAG, task.getTaskTitle());
@@ -486,7 +456,7 @@ public class HomeActivity extends AppCompatActivity/* implements AccountManagerC
 
 
     public void addTaskToServerDatabase(Task task) {
-        client = new ApiCaller(this).assignInterceptorWithToken();
+        client = new ApiCaller(getActivity()).assignInterceptorWithToken();
         retrofit = new Retrofit.Builder()
                 .baseUrl(BASE_URL)
                 .addConverterFactory(GsonConverterFactory.create(gson))
@@ -512,7 +482,7 @@ public class HomeActivity extends AppCompatActivity/* implements AccountManagerC
 
 
     public void updateTaskOnServer(Task task) {
-        client = new ApiCaller(this).assignInterceptorWithToken();
+        client = new ApiCaller(getActivity()).assignInterceptorWithToken();
         retrofit = new Retrofit.Builder()
                 .baseUrl(BASE_URL)
                 .addConverterFactory(GsonConverterFactory.create(gson))
@@ -535,6 +505,5 @@ public class HomeActivity extends AppCompatActivity/* implements AccountManagerC
                 Log.e(TAG, "Failure updating!");
             }
         });
-    }   */
-
+    }
 }

@@ -6,8 +6,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:fitsSystemWindows="true"
-    tools:context="com.example.catalyst.androidtodo.activities.HomeActivity"
-    class="com.example.catalyst.androidtodo.activities.HomeActivity">
+    tools:context="com.example.catalyst.androidtodo.activities.HomeActivity">
 
     <android.support.design.widget.AppBarLayout
         android:layout_width="match_parent"
@@ -23,11 +22,36 @@
 
     </android.support.design.widget.AppBarLayout>
 
-
-    <fragment
-        android:id="@+id/listView"
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        class="com.example.catalyst.androidtodo.fragments.HomeFragment"/>
+        android:orientation="horizontal">
+
+
+        <fragment
+            android:layout_width="0dp"
+            class="com.example.catalyst.androidtodo.fragments.HomeFragment"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:id="@+id/listView"
+            android:layout_margin="10dp">
+
+        </fragment>
+
+        <fragment
+            android:layout_width="0dp"
+            class="com.example.catalyst.androidtodo.fragments.TaskFragment"
+            android:layout_height="match_parent"
+            android:layout_weight="3"
+            android:layout_margin="10dp"
+            android:id="@+id/detailsView">
+
+        </fragment>
+
+
+    </LinearLayout>
+
+    <include layout="@layout/content_home"/>
+
 
 </RelativeLayout>

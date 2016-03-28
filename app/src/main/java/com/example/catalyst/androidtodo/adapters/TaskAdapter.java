@@ -28,7 +28,7 @@ import com.daimajia.swipe.SwipeLayout;
 import com.daimajia.swipe.adapters.RecyclerSwipeAdapter;
 
 
-public class TaskAdapter extends RecyclerSwipeAdapter<TaskAdapter.TaskViewHolder> { //RecyclerView.Adapter<TaskAdapter.TaskViewHolder> {
+public class TaskAdapter extends RecyclerSwipeAdapter<TaskAdapter.TaskViewHolder> {
 
     private Context mContext;
     private ArrayList<Task> mTasks = new ArrayList<Task>();
@@ -38,6 +38,8 @@ public class TaskAdapter extends RecyclerSwipeAdapter<TaskAdapter.TaskViewHolder
     public TaskAdapter(Context context, ArrayList<Task> tasks) {
         mContext = context;
         mTasks = tasks;
+
+        Log.d(TAG, "in taskAdapter constructor");
     }
 
     @Override
@@ -81,7 +83,7 @@ public class TaskAdapter extends RecyclerSwipeAdapter<TaskAdapter.TaskViewHolder
             public void onHandRelease(SwipeLayout layout, float xvel, float yvel) {
             }
         });
-
+        /*
         holder.swipeLayout.getSurfaceView().setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -89,7 +91,7 @@ public class TaskAdapter extends RecyclerSwipeAdapter<TaskAdapter.TaskViewHolder
                     ((HomeActivity) mContext).showTask(holder.mTask);
                 }
             }
-        });
+        });  */
 
     }
 
@@ -123,6 +125,8 @@ public class TaskAdapter extends RecyclerSwipeAdapter<TaskAdapter.TaskViewHolder
         }
 
         public void bindTask(final Task task) {
+
+            Log.d(TAG, "in taskAdapter bindTask");
             mTask = task;
             mTaskNameText.setText(task.getTaskTitle());
 
@@ -159,7 +163,7 @@ public class TaskAdapter extends RecyclerSwipeAdapter<TaskAdapter.TaskViewHolder
                 mTaskLocation.setText("");
             }
 
-            mTaskDeleteBtn.setOnClickListener(new View.OnClickListener() {
+           /* mTaskDeleteBtn.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
                     if (mContext instanceof HomeActivity) {
@@ -171,7 +175,7 @@ public class TaskAdapter extends RecyclerSwipeAdapter<TaskAdapter.TaskViewHolder
                     }
 
                 }
-            });
+            });  */
 
 
         }
