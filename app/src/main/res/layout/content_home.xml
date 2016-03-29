@@ -68,8 +68,7 @@
             android:layout_height="wrap_content"
             android:id="@+id/taskRecyclerView"
             android:layout_below="@+id/new_task_button"
-            android:layout_margin="5dp"
-            android:scrollbars="vertical"/>
+            android:layout_margin="5dp"/>
 
 
     </RelativeLayout>

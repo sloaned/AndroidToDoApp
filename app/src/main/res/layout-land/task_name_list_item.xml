@@ -35,12 +35,12 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:id="@+id/taskName"
-                android:textSize="18sp"/>
+                android:textSize="16sp"/>
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:id="@+id/taskDetails"
-                android:textSize="12sp" />
+                android:textSize="10sp" />
 
         </LinearLayout>
 
@@ -54,13 +54,13 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:id="@+id/taskDueDate"
-                android:textSize="14sp"
+                android:textSize="12sp"
                 android:layout_alignParentRight="true"/>
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:id="@+id/taskLocation"
-                android:textSize="14sp"
+                android:textSize="12sp"
                 android:layout_alignParentRight="true" />
 
         </LinearLayout>

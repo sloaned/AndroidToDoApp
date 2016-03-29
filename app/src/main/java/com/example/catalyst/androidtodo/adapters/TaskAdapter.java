@@ -1,5 +1,6 @@
 package com.example.catalyst.androidtodo.adapters;
 
+import android.app.Fragment;
 import android.content.Context;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.helper.ItemTouchHelper;
@@ -16,6 +17,7 @@ import android.widget.Toast;
 
 import com.example.catalyst.androidtodo.R;
 import com.example.catalyst.androidtodo.activities.HomeActivity;
+import com.example.catalyst.androidtodo.fragments.HomeFragment;
 import com.example.catalyst.androidtodo.models.Task;
 
 import java.text.ParseException;
@@ -32,12 +34,14 @@ public class TaskAdapter extends RecyclerSwipeAdapter<TaskAdapter.TaskViewHolder
 
     private Context mContext;
     private ArrayList<Task> mTasks = new ArrayList<Task>();
+    private HomeFragment mFragment;
 
     public static final String TAG = TaskAdapter.class.getSimpleName();
 
-    public TaskAdapter(Context context, ArrayList<Task> tasks) {
+    public TaskAdapter(Context context, ArrayList<Task> tasks, HomeFragment fragment) {
         mContext = context;
         mTasks = tasks;
+        mFragment = fragment;
 
         Log.d(TAG, "in taskAdapter constructor");
     }
@@ -83,15 +87,13 @@ public class TaskAdapter extends RecyclerSwipeAdapter<TaskAdapter.TaskViewHolder
             public void onHandRelease(SwipeLayout layout, float xvel, float yvel) {
             }
         });
-        /*
+
         holder.swipeLayout.getSurfaceView().setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (mContext instanceof HomeActivity) {
-                    ((HomeActivity) mContext).showTask(holder.mTask);
-                }
+                mFragment.showTask(holder.mTask);
             }
-        });  */
+        });
 
     }
 

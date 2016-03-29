@@ -39,7 +39,7 @@
             android:layout_height="wrap_content"
             android:id="@+id/viewCompletedTasksButton"
             android:text="View completed"
-            android:textSize="12sp"
+            android:textSize="8sp"
             android:layout_alignParentTop="true"
             android:layout_alignParentRight="true"/>
 
@@ -48,7 +48,7 @@
             android:layout_height="wrap_content"
             android:id="@+id/viewUncompletedTasksButton"
             android:text="View uncompleted"
-            android:textSize="12sp"
+            android:textSize="8sp"
             android:layout_alignParentTop="true"
             android:layout_alignParentRight="true"/>
 
@@ -58,7 +58,7 @@
             android:id="@+id/new_task_button"
             android:text="New Task"
             android:layout_alignParentLeft="true"
-            android:textSize="12sp"
+            android:textSize="8sp"
             android:paddingBottom="8dp"
             android:paddingLeft="8dp"/>
 
@@ -68,8 +68,7 @@
             android:layout_height="wrap_content"
             android:id="@+id/taskRecyclerView"
             android:layout_below="@+id/new_task_button"
-            android:layout_margin="5dp"
-            android:scrollbars="vertical"/>
+            android:layout_margin="5dp"/>
 
 
     </RelativeLayout>

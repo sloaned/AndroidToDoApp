@@ -3,9 +3,11 @@ package com.example.catalyst.androidtodo.fragments;
 import android.accounts.AccountManager;
 import android.accounts.AccountManagerCallback;
 import android.accounts.AccountManagerFuture;
+import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.res.Configuration;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.v4.app.Fragment;
@@ -25,6 +27,7 @@ import android.widget.Toast;
 
 import com.example.catalyst.androidtodo.R;
 import com.example.catalyst.androidtodo.activities.DetailActivity;
+import com.example.catalyst.androidtodo.activities.HomeActivity;
 import com.example.catalyst.androidtodo.activities.LoginActivity;
 import com.example.catalyst.androidtodo.adapters.TaskAdapter;
 import com.example.catalyst.androidtodo.data.DBHelper;
@@ -71,8 +74,11 @@ public class HomeFragment extends Fragment implements AccountManagerCallback<Bun
     private ITask apiCaller;
     private Retrofit retrofit;
 
+    private boolean isDualPane;
+
     private ArrayList<Task> mTasks = new ArrayList<Task>();
     private TaskAdapter adapter;
+    private View homeView;
     private SharedPreferences prefs;
     private SharedPreferences.Editor mEditor;
 
@@ -88,23 +94,34 @@ public class HomeFragment extends Fragment implements AccountManagerCallback<Bun
     @Bind(R.id.viewCompletedTasksButton)Button viewCompletedTasksButton;
     @Bind(R.id.viewUncompletedTasksButton)Button viewUncompletedTasksButton;
 
+    OnTaskSelectedListener mCallback;
+
+
+    public interface OnTaskSelectedListener {
+        public void onTaskSelected(Task task);
+    }
+
+
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        //super.onCreate(savedInstanceState);
-        //setContentView(R.layout.activity_home);
 
-
-        final View homeView = inflater.inflate(R.layout.content_home, null);
-
+        homeView = inflater.inflate(R.layout.content_home, null);
         ButterKnife.bind(this, homeView);
+
+        try {
+            mCallback = (OnTaskSelectedListener) getActivity();
+        } catch (ClassCastException e) {
+            throw new ClassCastException(getActivity().toString()
+                    + " must implement onTaskSelectedListener");
+        }
+
+        isDualPane = (getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE);
 
         prefs = PreferenceManager.getDefaultSharedPreferences(getActivity());
         mEditor = prefs.edit();
         mTaskDBOperations = new TaskDBOperations(getActivity());
 
-        //Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
-        //setSupportActionBar(toolbar);
-        adapter = new TaskAdapter(getActivity(), mTasks);
+        adapter = new TaskAdapter(getActivity(), mTasks, this);
 
         mTaskListView.setAdapter(adapter);
         RecyclerView.LayoutManager layoutManager = new LinearLayoutManager(getActivity());
@@ -117,7 +134,7 @@ public class HomeFragment extends Fragment implements AccountManagerCallback<Bun
         newTaskButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                showTask(null);
+                showTask(new Task());
             }
         });
 
@@ -248,10 +265,15 @@ public class HomeFragment extends Fragment implements AccountManagerCallback<Bun
 
     public void showTask(Task task) {
 
-        Intent intent = new Intent(getActivity(), DetailActivity.class);
-        intent.putExtra("Task", task);
-        startActivity(intent);
-        updateList();
+
+        if (isDualPane) {
+            mCallback.onTaskSelected(task);
+        } else {
+            Intent intent = new Intent(getActivity(), DetailActivity.class);
+            intent.putExtra("Task", task);
+            startActivity(intent);
+            updateList();
+        }
     }
 
     private void toggleRefresh() {

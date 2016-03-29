@@ -31,6 +31,8 @@ import android.widget.TextView;
 import android.widget.TimePicker;
 
 import com.example.catalyst.androidtodo.R;
+import com.example.catalyst.androidtodo.activities.DetailActivity;
+import com.example.catalyst.androidtodo.activities.HomeActivity;
 import com.example.catalyst.androidtodo.data.DBHelper;
 import com.example.catalyst.androidtodo.models.Participant;
 import com.example.catalyst.androidtodo.models.Task;
@@ -71,6 +73,7 @@ public class TaskFragment extends Fragment {
     private static final String BASE_URL = "http://pc30120.catalystsolves.com:8080/";
 
     private static Task task;
+    private static HomeFragment fragment;
     private long dateInMilliseconds = 0;
     private long timeInMilliseconds = -1;
 
@@ -97,39 +100,28 @@ public class TaskFragment extends Fragment {
     @Bind(R.id.clearLocationButton)Button clearLocationButton;
     @Bind(R.id.taskCompletedCheckbox)CheckBox markCompletedCheckbox;
     @Bind(R.id.newTaskParticipantButton)Button addParticipantButton;
-    @Bind(R.id.newTaskParticipantsLayout)
-    LinearLayout taskParticipantLayout;
+    @Bind(R.id.newTaskParticipantsLayout)LinearLayout taskParticipantLayout;
     @Bind(R.id.cancelTaskButton) Button cancelButton;
     @Bind(R.id.saveTaskButton) Button saveButton;
-
-  /*  private EditText taskTitleView;
-    private EditText taskDetailView;
-    private EditText taskLocationView;
-    private TextView dateView;
-    private TextView timeView;
-    private Button datePickerButton;
-    private Button timePickerButton;
-    private Button pickLocationButton;
-    private Button clearTimeButton;
-    private Button clearDateButton;
-    private Button clearLocationButton;
-    private CheckBox markCompletedCheckbox;
-    private Button addParticipantButton;
-    private LinearLayout taskParticipantLayout;
-    private Button cancelButton;
-    private Button saveButton; */
 
     private boolean editing = false;
     private int participantNumber = 0;
 
     private View taskView;
 
+    OnSubmitListener mCallback;
+
     // private ArrayList<String> participantMatches = new ArrayList<String>();
 
     public TaskFragment() {}
 
-    public static TaskFragment newInstance(Task mTask) {
+    public interface OnSubmitListener {
+        public void onListChanged(boolean complete);
+    }
+
+    public static TaskFragment newInstance(Task mTask, HomeFragment mFragment) {
         task = mTask;
+        fragment = mFragment;
 
         TaskFragment fragment = new TaskFragment();
 
@@ -148,9 +140,6 @@ public class TaskFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 
-        //super.onCreateDialog(savedInstanceState);
-        //setContentView(R.layout.add_new_task);
-
         //mTaskDBOperations = new TaskDBOperations(this);
 
         Log.d(TAG, "in onCreateView");
@@ -159,87 +148,20 @@ public class TaskFragment extends Fragment {
 
         Log.d(TAG, "taskView = " + taskView);
 
-        /*Intent intent = getIntent();
-        if (intent != null && intent.hasExtra("Task") && intent.getSerializableExtra("Task") != null) {
-            task = (Task) intent.getSerializableExtra("Task");
-        } else {
-            task = new Task();
-        }   */
-
         ButterKnife.bind(this, taskView);
 
-        //isDualPane = (getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE);
-/*
-        taskTitleView = (EditText) taskView.findViewById(R.id.newTaskTitleValue);
-        taskDetailView = (EditText) taskView.findViewById(R.id.newTaskDetailsValue);
-        taskLocationView = (EditText) taskView.findViewById(R.id.newTaskLocationValue);
-        dateView = (TextView) taskView.findViewById(R.id.newTaskDateValue);
-        timeView = (TextView) taskView.findViewById(R.id.newTaskTimeValue);
-        datePickerButton = (Button) taskView.findViewById(R.id.newTaskDatePickerBtn);
-        timePickerButton = (Button) taskView.findViewById(R.id.newTaskTimePickerBtn);
-        pickLocationButton = (Button) taskView.findViewById(R.id.pickLocationButton);
-        clearDateButton = (Button) taskView.findViewById(R.id.clearDateButton);
-        clearTimeButton = (Button) taskView.findViewById(R.id.clearTimeButton);
-        clearLocationButton = (Button) taskView.findViewById(R.id.clearLocationButton);
-        markCompletedCheckbox = (CheckBox) taskView.findViewById(R.id.taskCompletedCheckbox);
-        addParticipantButton = (Button) taskView.findViewById(R.id.newTaskParticipantButton);
-        cancelButton = (Button) taskView.findViewById(R.id.cancelTaskButton);
-        saveButton = (Button) taskView.findViewById(R.id.saveTaskButton);  */
 
+        isDualPane = (getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE);
 
+        if (getActivity() instanceof HomeActivity && isDualPane) {
+            mCallback = (OnSubmitListener) getActivity();
+        }
 
         clearDateButton.setVisibility(View.INVISIBLE);
         clearTimeButton.setVisibility(View.INVISIBLE);
         clearLocationButton.setVisibility(View.INVISIBLE);
 
-        if (task != null && task.getTaskTitle() != null && !task.getTaskTitle().equals(null) && !task.getTaskTitle().equals("")) {
-            editing = true;
-            taskTitleView.setText(task.getTaskTitle());
-            if (task.getTaskDetails() != null && !task.getTaskDetails().equals(null) && !task.getTaskDetails().equals("")) {
-                taskDetailView.setText(task.getTaskDetails());
-            }
-            if (task.getLocationName() != null && !task.getLocationName().equals(null) && !task.getLocationName().equals("")) {
-                taskLocationView.setText(task.getLocationName());
-                clearLocationButton.setVisibility(View.VISIBLE);
-            }
-            if (task.getDueDate() != 0 /*&& !task.getDueDate().equals(null) && !task.getDueDate().equals("") */) {
-                long milliseconds = Long.valueOf(task.getDueDate());
-                SimpleDateFormat dt = new SimpleDateFormat("EEE MMM dd hh:mm:ss z yyyy");
-                SimpleDateFormat dateFormat = new SimpleDateFormat("MM/dd/yyyy");
-                SimpleDateFormat timeFormat = new SimpleDateFormat("h:mm aaa");
-
-                Date date = new Date(milliseconds);
-
-                String dateString = date.toString();
-                try {
-                    date = dt.parse(dateString);
-                } catch (ParseException e) {
-                    Log.e(TAG, "date parsing error: " + e.getMessage());
-                }
-                timeInMilliseconds = milliseconds % 86400000;
-                dateInMilliseconds = milliseconds - timeInMilliseconds;
-
-                String theDate = dateFormat.format(date);
-                String theTime = timeFormat.format(date);
-                dateView.setText(theDate);
-                clearDateButton.setVisibility(View.VISIBLE);
-                timeView.setText(theTime);
-                clearTimeButton.setVisibility(View.VISIBLE);
-            }
-            if (task.getParticipants().size() > 0) {
-
-                for (int i = 0; i < task.getParticipants().size(); i++) {
-                    String name = task.getParticipants().get(i).getParticipantName();
-                    addParticipantView(name);
-                }
-            }
-
-            if (task.isCompleted()) {
-                markCompletedCheckbox.setChecked(true);
-            }
-        } else {
-            task = new Task();
-        }
+        updateTaskView(task);
 
         taskLocationView.setOnFocusChangeListener(new View.OnFocusChangeListener() {
             @Override
@@ -474,6 +396,80 @@ public class TaskFragment extends Fragment {
 
     }
 
+    public void updateTaskView(Task newTask) {
+
+        if (newTask != null && newTask.getTaskTitle() != null && !newTask.getTaskTitle().equals(null) && !newTask.getTaskTitle().equals("")) {
+            editing = true;
+            taskTitleView.setText(newTask.getTaskTitle());
+            task = newTask;
+            if (newTask.getTaskDetails() != null && !newTask.getTaskDetails().equals(null) && !newTask.getTaskDetails().equals("")) {
+                taskDetailView.setText(newTask.getTaskDetails());
+            } else {
+                taskDetailView.setText("");
+            }
+            if (newTask.getLocationName() != null && !newTask.getLocationName().equals(null) && !newTask.getLocationName().equals("")) {
+                taskLocationView.setText(newTask.getLocationName());
+                clearLocationButton.setVisibility(View.VISIBLE);
+            } else {
+                taskLocationView.setText("");
+            }
+            if (newTask.getDueDate() != 0) {
+                long milliseconds = Long.valueOf(newTask.getDueDate());
+                SimpleDateFormat dt = new SimpleDateFormat("EEE MMM dd hh:mm:ss z yyyy");
+                SimpleDateFormat dateFormat = new SimpleDateFormat("MM/dd/yyyy");
+                SimpleDateFormat timeFormat = new SimpleDateFormat("h:mm aaa");
+
+                Date date = new Date(milliseconds);
+
+                String dateString = date.toString();
+                try {
+                    date = dt.parse(dateString);
+                } catch (ParseException e) {
+                    Log.e(TAG, "date parsing error: " + e.getMessage());
+                }
+                timeInMilliseconds = milliseconds % 86400000;
+                dateInMilliseconds = milliseconds - timeInMilliseconds;
+
+                String theDate = dateFormat.format(date);
+                String theTime = timeFormat.format(date);
+                dateView.setText(theDate);
+                clearDateButton.setVisibility(View.VISIBLE);
+                timeView.setText(theTime);
+                clearTimeButton.setVisibility(View.VISIBLE);
+            } else {
+                dateView.setText("");
+                timeView.setText("");
+            }
+            if (newTask.getParticipants().size() > 0) {
+
+                for (int i = 0; i < task.getParticipants().size(); i++) {
+                    String name = newTask.getParticipants().get(i).getParticipantName();
+                    addParticipantView(name);
+                }
+            }
+
+            if (newTask.isCompleted()) {
+                markCompletedCheckbox.setChecked(true);
+            } else {
+                markCompletedCheckbox.setChecked(false);
+            }
+        } else {
+            editing = false;
+            task = new Task();
+            clearAllViews();
+        }
+
+    }
+
+    public void clearAllViews() {
+        markCompletedCheckbox.setChecked(false);
+        taskTitleView.setText("");
+        taskDetailView.setText("");
+        taskLocationView.setText("");
+        dateView.setText("");
+        timeView.setText("");
+    }
+
     public void addTaskToLocalDatabase() {
         DBHelper dbHelper = new DBHelper(getActivity());
         dbHelper.addTask(task);
@@ -541,25 +537,6 @@ public class TaskFragment extends Fragment {
             markCompletedCheckbox.setChecked(true);
         }
     }
-
-/*
-    private OkHttpClient assignInterceptorWithToken() {
-        prefs = PreferenceManager.getDefaultSharedPreferences(this);
-
-        final String token = prefs.getString(SharedPreferencesConstants.PREFS_TOKEN, (String) null);
-        return client.newBuilder().addInterceptor(new Interceptor() {
-            @Override
-            public okhttp3.Response intercept(Chain chain) throws IOException {
-                Request original = chain.request();
-
-                Request request = original.newBuilder()
-                        .method(original.method(), original.body())
-                        .header("X-AUTH-TOKEN", token)
-                        .build();
-                return chain.proceed(request);
-            }
-        }).build();
-    } */
 
     public interface OnFragmentInteractionListener {
         void onFragmentInteraction(Uri uri);
@@ -655,14 +632,12 @@ public class TaskFragment extends Fragment {
     }
 
     private void updateList() {
-            /*
-        Log.d(TAG, "parent = " + getParent());
-        if (getParent() instanceof HomeActivity) {
-            ((HomeActivity) getParent()).updateList();
+        if (getActivity() instanceof DetailActivity) {
+            getActivity().finish();
+        } else {
+            mCallback.onListChanged(task.isCompleted());
         }
-        finish();  */
 
-        getActivity().finish();
     }
 
 
