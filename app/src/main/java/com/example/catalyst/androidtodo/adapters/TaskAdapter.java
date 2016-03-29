@@ -132,7 +132,7 @@ public class TaskAdapter extends RecyclerSwipeAdapter<TaskAdapter.TaskViewHolder
             mTask = task;
             mTaskNameText.setText(task.getTaskTitle());
 
-            if (task.getDueDate() != 0/* && !task.getDueDate().equals(null) && !task.getDueDate().equals("")*/) {
+            if (task.getDueDate() != 0) {
 
                 Log.d(TAG, "in bindTask in the adapter, dueDate not null, = " + task.getDueDate());
                 long milliseconds = Long.valueOf(task.getDueDate());

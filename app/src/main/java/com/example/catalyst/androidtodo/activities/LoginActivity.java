@@ -307,9 +307,9 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
         @Override
         protected Boolean doInBackground(Void... params) {
 
-            new ApiCaller(LoginActivity.this).loginUserAndGetToken(mEmail, mPassword);
+            return new ApiCaller(LoginActivity.this).loginUserAndGetToken(mEmail, mPassword);
             //new ApiCaller().loginUserAndGetToken(mEmail, mPassword);
-            return false;
+            //return false;
         }
 
         @Override

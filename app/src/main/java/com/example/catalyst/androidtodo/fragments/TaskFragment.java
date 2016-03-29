@@ -338,6 +338,8 @@ public class TaskFragment extends Fragment {
 
                     if (dateInMilliseconds != 0 || timeInMilliseconds != -1) {
 
+                        Log.d(TAG, "There is some date: dateInMilliseconds = " + dateInMilliseconds + ", timeInMilliseconds = " + timeInMilliseconds);
+
                         long milliseconds = 0;
 
                         if (dateInMilliseconds == 0) {
@@ -362,7 +364,7 @@ public class TaskFragment extends Fragment {
                         task.setDueDate(milliseconds);
                     } else {
                         Log.d(TAG, "dateInMilliseconds = " + dateInMilliseconds + ", timeInMilliseconds = " + timeInMilliseconds);
-                        // task.setDueDate(null);
+                        task.setDueDate(0);
                     }
 
                     String tz = TimeZone.getDefault().getID();

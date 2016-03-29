@@ -176,7 +176,7 @@ public class ApiCaller {
         });
     }
 
-    public String loginUserAndGetToken(String username, String password) {
+    public void /*String */ loginUserAndGetToken(String username, String password) {
 
         LoginUser loginRequest = new LoginUser();
         loginRequest.setUsername(username);
@@ -222,12 +222,13 @@ public class ApiCaller {
             public void onFailure(Call<ResponseBody> call, Throwable t) {
                 Log.e(TAG, "Dat Failure: " + t.getMessage());
                 userToken = "";
+
             }
         });
         Log.d(TAG, "logged in? : " + loggedIn);
         //return loggedIn;
 
-        return userToken;
+        //return userToken;
     }
 
     public void makeUserPostCall() {
