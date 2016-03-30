@@ -6,6 +6,7 @@ import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
 import android.util.Log;
 
+import com.example.catalyst.androidtodo.activities.LoginActivity;
 import com.example.catalyst.androidtodo.activities.MainActivity;
 import com.example.catalyst.androidtodo.models.Task;
 import com.example.catalyst.androidtodo.models.User;
@@ -54,6 +55,13 @@ public class ApiCaller {
     private boolean loggedIn;
     private String userToken;
 
+    LoginListener mCallback;
+
+    public interface LoginListener {
+        public void loginSuccess();
+        public void loginFailure();
+    }
+
     public static OkHttpClient assignInterceptorWithToken() {
 
         final String token = prefs.getString(SharedPreferencesConstants.PREFS_TOKEN, (String) null);
@@ -73,6 +81,12 @@ public class ApiCaller {
     }
 
     public ApiCaller(Context context) {
+
+        Log.d(TAG, "context = " + context);
+
+        if (context instanceof LoginActivity) {
+            mCallback = (LoginListener) context;
+        }
 
         mContext = context;
 
@@ -210,11 +224,17 @@ public class ApiCaller {
 
                         loggedIn = true;
 
-                        Intent intent = new Intent(mContext, MainActivity.class);
-                        mContext.startActivity(intent);
+                     /*   Intent intent = new Intent(mContext, MainActivity.class);
+                        mContext.startActivity(intent);  */
+
+                        mCallback.loginSuccess();
+
                     }
                     i++;
-                } 
+                }
+                if (!loggedIn) {
+                    mCallback.loginFailure();
+                }
 
             }
 
@@ -222,13 +242,12 @@ public class ApiCaller {
             public void onFailure(Call<ResponseBody> call, Throwable t) {
                 Log.e(TAG, "Dat Failure: " + t.getMessage());
                 userToken = "";
+                mCallback.loginFailure();
 
             }
         });
         Log.d(TAG, "logged in? : " + loggedIn);
-        //return loggedIn;
 
-        //return userToken;
     }
 
     public void makeUserPostCall() {

@@ -128,7 +128,7 @@ public class TaskAdapter extends RecyclerSwipeAdapter<TaskAdapter.TaskViewHolder
 
         public void bindTask(final Task task) {
 
-            Log.d(TAG, "in taskAdapter bindTask");
+            Log.d(TAG, "in taskAdapter bindTask, task = " + task.getTaskTitle() + ", # of participants = " + task.getParticipants().size());
             mTask = task;
             mTaskNameText.setText(task.getTaskTitle());
 

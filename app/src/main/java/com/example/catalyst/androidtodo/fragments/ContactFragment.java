@@ -2,10 +2,11 @@ package com.example.catalyst.androidtodo.fragments;
 
 import android.app.AlertDialog;
 import android.app.Dialog;
+import android.app.DialogFragment;
+import android.app.Fragment;
 import android.content.DialogInterface;
 import android.net.Uri;
 import android.os.Bundle;
-import android.support.v4.app.DialogFragment;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -27,6 +28,7 @@ public class ContactFragment extends DialogFragment {
     private static ArrayList<String> contacts = new ArrayList<String>();
     private static int participantNumber;
     private ContactAdapter adapter;
+    private static TaskFragment mTaskFragment;
     private static ContactClickListener callback;
 
     public ContactFragment() {}
@@ -38,8 +40,10 @@ public class ContactFragment extends DialogFragment {
     @Override
     public Dialog onCreateDialog(Bundle savedInstanceState) {
 
+        Log.d(TAG, "in ContactFragment onCreateDialog");
+
         try {
-            callback = (ContactClickListener) getTargetFragment();
+            callback = (ContactClickListener) mTaskFragment;
         } catch (ClassCastException e) {
             throw new ClassCastException("Calling fragment must implement DialogClickListener interface");
         }
@@ -81,9 +85,12 @@ public class ContactFragment extends DialogFragment {
     }
 
 
-    public static ContactFragment newInstance(ArrayList<String> contactList, int participant) {
+    public static ContactFragment newInstance(ArrayList<String> contactList, int participant, TaskFragment taskFragment) {
+
+        Log.d("ContactFragment", "in ContactFragment newInstance");
         contacts = contactList;
         participantNumber = participant;
+        mTaskFragment = taskFragment;
 
         ContactFragment fragment = new ContactFragment();
         Bundle args = new Bundle();

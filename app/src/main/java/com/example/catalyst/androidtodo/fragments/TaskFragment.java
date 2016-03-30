@@ -2,7 +2,9 @@ package com.example.catalyst.androidtodo.fragments;
 
 import android.app.ActionBar;
 import android.app.DatePickerDialog;
+import android.app.DialogFragment;
 import android.app.Fragment;
+import android.app.FragmentManager;
 import android.app.TimePickerDialog;
 import android.content.Context;
 import android.content.SharedPreferences;
@@ -13,7 +15,6 @@ import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.ContactsContract;
-import android.support.v4.app.DialogFragment;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
@@ -64,7 +65,7 @@ import retrofit2.Retrofit;
 /**
  * Created by dsloane on 3/25/2016.
  */
-public class TaskFragment extends Fragment {
+public class TaskFragment extends Fragment implements ContactFragment.ContactClickListener {
 
     private final String TAG = getClass().getSimpleName();
     private boolean isDualPane;
@@ -187,6 +188,7 @@ public class TaskFragment extends Fragment {
                 if (dialog.getDialog() != null) {
                     dialog.getDialog().setCanceledOnTouchOutside(true);
                 }
+                dialog.show(getFragmentManager(), "dialog");
             }
         });
 
@@ -402,6 +404,7 @@ public class TaskFragment extends Fragment {
 
         if (newTask != null && newTask.getTaskTitle() != null && !newTask.getTaskTitle().equals(null) && !newTask.getTaskTitle().equals("")) {
             editing = true;
+            Log.d(TAG, "updating task, number of participants = " + newTask.getParticipants().size());
             taskTitleView.setText(newTask.getTaskTitle());
             task = newTask;
             if (newTask.getTaskDetails() != null && !newTask.getTaskDetails().equals(null) && !newTask.getTaskDetails().equals("")) {
@@ -444,7 +447,7 @@ public class TaskFragment extends Fragment {
             }
             if (newTask.getParticipants().size() > 0) {
 
-                for (int i = 0; i < task.getParticipants().size(); i++) {
+                for (int i = 0; i < newTask.getParticipants().size(); i++) {
                     String name = newTask.getParticipants().get(i).getParticipantName();
                     addParticipantView(name);
                 }
@@ -768,11 +771,15 @@ public class TaskFragment extends Fragment {
             public void onClick(View v) {
                 ArrayList<String> names = getContactList();
 
-                DialogFragment dialog = ContactFragment.newInstance(names, editText.getId());
+                DialogFragment dialog = ContactFragment.newInstance(names, editText.getId(), TaskFragment.this);
+
+                Log.d(TAG, "dialog = " + dialog);
 
                 if (dialog.getDialog() != null) {
                     dialog.getDialog().setCanceledOnTouchOutside(true);
                 }
+                FragmentManager manager = getFragmentManager();
+                dialog.show(manager, "dialog");
 
             }
         });
@@ -823,6 +830,7 @@ public class TaskFragment extends Fragment {
         });
     }
 
+    @Override
     public void assignParticipant(String name, int id) {
         AutoCompleteTextView editText = (AutoCompleteTextView)taskView.findViewById(id);
         editText.setText(name);

@@ -3,7 +3,11 @@ package com.example.catalyst.androidtodo.activities;
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.annotation.TargetApi;
+import android.content.Context;
+import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
@@ -19,6 +23,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.provider.ContactsContract;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -29,21 +34,58 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
 import com.example.catalyst.androidtodo.R;
 import com.example.catalyst.androidtodo.network.ApiCaller;
+import com.example.catalyst.androidtodo.network.RetrofitInterfaces.ILoginUser;
+import com.example.catalyst.androidtodo.network.RetrofitInterfaces.ITask;
+import com.example.catalyst.androidtodo.network.RetrofitInterfaces.IUsers;
+import com.example.catalyst.androidtodo.network.entities.LoginUser;
+import com.example.catalyst.androidtodo.util.NetworkConstants;
+import com.example.catalyst.androidtodo.util.SharedPreferencesConstants;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 
 import butterknife.Bind;
 import butterknife.ButterKnife;
+import okhttp3.Interceptor;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.ResponseBody;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Retrofit;
+import retrofit2.converter.gson.GsonConverterFactory;
 
 import static android.Manifest.permission.READ_CONTACTS;
 
 /**
  * A login screen that offers login via email/password.
  */
-public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<Cursor> {
+public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<Cursor>, ApiCaller.LoginListener {
+
+    private final String TAG = getClass().getSimpleName();
+
+    private static final String BASE_URL = "http://pc30120.catalystsolves.com:8080/";
+
+    private Gson gson = new GsonBuilder().setDateFormat("yyyy-MM-dd'T'HH:mm:ssZ").create();
+    private static OkHttpClient client = new OkHttpClient();
+    private static SharedPreferences prefs;
+
+    private SharedPreferences.Editor mEditor;
+    private Retrofit retrofit;
+
+    private ILoginUser loginUser;
+    private ITask apiCaller;
+    private IUsers userCall;
+
+    private Context mContext;
+
+    private boolean loggedIn;
+    private String userToken;
 
     /**
      * Id to identity READ_CONTACTS permission request.
@@ -66,6 +108,18 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
         ButterKnife.bind(this);
+
+
+        prefs = PreferenceManager.getDefaultSharedPreferences(this);
+        mEditor = prefs.edit();
+
+        client = assignInterceptor();
+
+        retrofit = new Retrofit.Builder()
+                .baseUrl(BASE_URL)
+                .addConverterFactory(GsonConverterFactory.create(gson))
+                .client(client)
+                .build();
         // Set up the login form.
         //mEmailView = (AutoCompleteTextView) findViewById(R.id.email);
         populateAutoComplete();
@@ -92,6 +146,20 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
 
        // mLoginFormView = findViewById(R.id.login_form);
         //mProgressView = findViewById(R.id.login_progress);
+    }
+
+    private OkHttpClient assignInterceptor() {
+        return client.newBuilder().addInterceptor(new Interceptor() {
+            @Override
+            public okhttp3.Response intercept(Chain chain) throws IOException {
+                Request original = chain.request();
+
+                Request request = original.newBuilder()
+                        .method(original.method(), original.body())
+                        .build();
+                return chain.proceed(request);
+            }
+        }).build();
     }
 
     private void populateAutoComplete() {
@@ -186,7 +254,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
             // perform the user login attempt.
             showProgress(true);
             mAuthTask = new UserLoginTask(email, password);
-            mAuthTask.execute((Void) null);
+            mAuthTask.loginUser();
         }
     }
 
@@ -294,7 +362,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
      * Represents an asynchronous login/registration task used to authenticate
      * the user.
      */
-    public class UserLoginTask extends AsyncTask<Void, Void, Boolean> {
+    public class UserLoginTask/* extends AsyncTask<Void, Void, Boolean> */ {
 
         private final String mEmail;
         private final String mPassword;
@@ -304,32 +372,26 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
             mPassword = password;
         }
 
-        @Override
-        protected Boolean doInBackground(Void... params) {
+        protected void loginUser() {
 
-            return new ApiCaller(LoginActivity.this).loginUserAndGetToken(mEmail, mPassword);
-            //new ApiCaller().loginUserAndGetToken(mEmail, mPassword);
-            //return false;
+            new ApiCaller(LoginActivity.this).loginUserAndGetToken(mEmail, mPassword);
         }
+    }
 
-        @Override
-        protected void onPostExecute(final Boolean success) {
-            mAuthTask = null;
-            showProgress(false);
+    @Override
+    public void loginSuccess() {
+        mAuthTask = null;
+        showProgress(false);
+        finish();
+    }
 
-            if (success) {
-                finish();
-            } else {
-                mPasswordView.setError(getString(R.string.error_incorrect_password));
-                mPasswordView.requestFocus();
-            }
-        }
+    @Override
+    public void loginFailure() {
+        mAuthTask = null;
+        showProgress(false);
 
-        @Override
-        protected void onCancelled() {
-            mAuthTask = null;
-            showProgress(false);
-        }
+        mPasswordView.setError(getString(R.string.error_incorrect_password));
+        mPasswordView.requestFocus();
     }
 }
 

@@ -115,6 +115,7 @@ public class DBHelper extends SQLiteOpenHelper {
 
 
     public boolean addTask(Task task) {
+        Log.d(TAG, "adding task in DBHelper. number of participants: " + task.getParticipants().size());
         SQLiteDatabase db = this.getWritableDatabase();
 
         ContentValues contentValues = new ContentValues();
@@ -137,15 +138,20 @@ public class DBHelper extends SQLiteOpenHelper {
             contentValues.put(TaskContract.TaskEntry.COLUMN_COMPLETED, 0);
         }
 
-        db.insert(TaskContract.TaskEntry.TABLE_NAME, null, contentValues);
+        int taskId = (int) db.insert(TaskContract.TaskEntry.TABLE_NAME, null, contentValues);
 
         for (Participant p : task.getParticipants()) {
+            Log.d(TAG, p.getParticipantName());
+
             if(!doesParticipantExist(p.getParticipantName())) {
                 addParticipant(p);
             }
             int id = getParticipantId(p.getParticipantName());
+
+            Log.d(TAG, "participantId = " + id);
+            Log.d(TAG, "taskId = " + taskId);
             if (id >= 0) {
-                addTaskParticipant(task.getId(), id);
+                addTaskParticipant(taskId, id);
             }
         }
         db.close();
@@ -187,6 +193,7 @@ public class DBHelper extends SQLiteOpenHelper {
     }
 
     public boolean addParticipant(Participant participant) {
+        Log.d(TAG, "adding participant: " + participant.getParticipantName());
         SQLiteDatabase db = this.getWritableDatabase();
 
         ContentValues contentValues = new ContentValues();
@@ -424,9 +431,10 @@ public class DBHelper extends SQLiteOpenHelper {
         if (res != null) {
             res.moveToFirst();
 
-            while (res.moveToNext() != false) {
+            while (!res.isAfterLast()) {
                 int idInt = res.getInt(res.getColumnIndex(Task_ParticipantContract.Task_ParticipantEntry.COLUMN_PARTICIPANT_ID));
                 participantIds.add(idInt);
+                res.moveToNext();
             }
 
         }
@@ -468,6 +476,8 @@ public class DBHelper extends SQLiteOpenHelper {
 
         for (int i : participantIds) {
             Participant p = getParticipantById(i);
+
+            Log.d(TAG, "in getTaskParticipants, participant name = " + p.getParticipantName());
             participants.add(p);
         }
 
