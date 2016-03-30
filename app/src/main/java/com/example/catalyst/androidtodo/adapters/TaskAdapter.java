@@ -128,13 +128,11 @@ public class TaskAdapter extends RecyclerSwipeAdapter<TaskAdapter.TaskViewHolder
 
         public void bindTask(final Task task) {
 
-            Log.d(TAG, "in taskAdapter bindTask, task = " + task.getTaskTitle() + ", # of participants = " + task.getParticipants().size());
             mTask = task;
             mTaskNameText.setText(task.getTaskTitle());
 
             if (task.getDueDate() != 0) {
 
-                Log.d(TAG, "in bindTask in the adapter, dueDate not null, = " + task.getDueDate());
                 long milliseconds = Long.valueOf(task.getDueDate());
                 SimpleDateFormat dt = new SimpleDateFormat("EEE MMM dd hh:mm:ss z yyyy");
                 SimpleDateFormat dt1 = new SimpleDateFormat("EEE, MM/dd/yyyy 'at' h:mm aaa");
@@ -165,19 +163,19 @@ public class TaskAdapter extends RecyclerSwipeAdapter<TaskAdapter.TaskViewHolder
                 mTaskLocation.setText("");
             }
 
-           /* mTaskDeleteBtn.setOnClickListener(new View.OnClickListener() {
+            mTaskDeleteBtn.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
                     if (mContext instanceof HomeActivity) {
                         if (task.getServerId() == 0) {
-                            ((HomeActivity) mContext).deleteTaskLocally(task.getId());
+                            mFragment.deleteTaskLocally(task.getId());
                         } else {
-                            ((HomeActivity) mContext).deleteTaskFromServer(task.getServerId(), task.getId());
+                            mFragment.deleteTaskFromServer(task.getServerId(), task.getId());
                         }
                     }
 
                 }
-            });  */
+            });
 
 
         }

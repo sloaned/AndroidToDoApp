@@ -178,7 +178,6 @@ public class HomeFragment extends Fragment implements AccountManagerCallback<Bun
     }
 
     public void updateList() {
-        Log.d(TAG, "updating list!");
         getUncompletedTasks();
     }
 
@@ -288,8 +287,6 @@ public class HomeFragment extends Fragment implements AccountManagerCallback<Bun
     }
 
     private void toggleButtons() {
-        Log.d(TAG, "viewCompletedTasksButton visibility = " + viewCompletedTasksButton.getVisibility());
-        Log.d(TAG, "viewUncompletedTasksbutton visibility = " + viewUncompletedTasksButton.getVisibility());
         if (viewCompletedTasksButton.getVisibility() == View.GONE) {
             viewUncompletedTasksButton.setVisibility(View.GONE);
             viewCompletedTasksButton.setVisibility(View.VISIBLE);
@@ -318,8 +315,6 @@ public class HomeFragment extends Fragment implements AccountManagerCallback<Bun
 
                 try {
                     String taskArray = response.body().string();
-                    Log.d(TAG, "now getting unsynched tasks from the server");
-                    Log.d(TAG, taskArray);
 
                     try {
                         JSONArray tasks = new JSONArray(taskArray);
@@ -404,8 +399,6 @@ public class HomeFragment extends Fragment implements AccountManagerCallback<Bun
 
         // send local unsynched tasks to server
 
-        Log.d(TAG, "now sending unsynched tasks to the server");
-
         ArrayList<Task> unsyncedTasks = mTaskDBOperations.getLocalUnsynchedTasks();
         tasksSyncedToServer = unsyncedTasks.size();
 
@@ -426,13 +419,11 @@ public class HomeFragment extends Fragment implements AccountManagerCallback<Bun
 
         String message = "Sync successful. " + tasksSyncedToServer + " tasks uploaded to server, " +
                 tasksSyncedFromServer + " tasks imported from server";
-        Log.d(TAG, "message = " + message);
         Toast.makeText(getActivity(), message, Toast.LENGTH_LONG).show();
 
         // call local database to show all tasks
         updateList();
 
-        Log.d(TAG, "Tasks have been synched. now mTasks contains: ");
         for (Task task : mTasks) {
             Log.v(TAG, task.getTaskTitle());
         }

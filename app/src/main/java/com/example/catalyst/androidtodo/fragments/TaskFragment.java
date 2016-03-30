@@ -143,11 +143,7 @@ public class TaskFragment extends Fragment implements ContactFragment.ContactCli
 
         //mTaskDBOperations = new TaskDBOperations(this);
 
-        Log.d(TAG, "in onCreateView");
-
         taskView = inflater.inflate(R.layout.add_new_task, null);
-
-        Log.d(TAG, "taskView = " + taskView);
 
         ButterKnife.bind(this, taskView);
 
@@ -214,7 +210,6 @@ public class TaskFragment extends Fragment implements ContactFragment.ContactCli
                         try {
                             Date date = formatter.parse(dateString);
                             dateInMilliseconds = date.getTime();
-                            Log.d(TAG, "date in milliseconds = " + dateInMilliseconds);
                         } catch (ParseException e) {
                             Log.e(TAG, e.getMessage());
                         }
@@ -240,7 +235,6 @@ public class TaskFragment extends Fragment implements ContactFragment.ContactCli
                     public void onTimeSet(TimePicker view, int hour, int minute) {
                         long milliSeconds = (hour * 3600 * 1000) + (minute * 60 * 1000);
                         timeInMilliseconds = milliSeconds;
-                        Log.d(TAG, "time in milliseconds = " + timeInMilliseconds);
 
                         String meridiem = "AM";
                         if (hour > 11) {
@@ -321,12 +315,9 @@ public class TaskFragment extends Fragment implements ContactFragment.ContactCli
                     List<Participant> participants = new ArrayList<Participant>();
 
                     if (participantNumber > 0) {
-                        Log.d(TAG, "participantNumber = " + participantNumber);
-
                         for (int i = 0; i < participantNumber; i++) {
                             EditText editText = (EditText) taskView.findViewById(i);
                             String taskParticipant = editText.getText().toString();
-                            Log.d(TAG, "participant name = " + taskParticipant);
 
                             if (!taskParticipant.equals(null) && !taskParticipant.equals("")) {
                                 Participant participant = new Participant();
@@ -340,8 +331,6 @@ public class TaskFragment extends Fragment implements ContactFragment.ContactCli
 
                     if (dateInMilliseconds != 0 || timeInMilliseconds != -1) {
 
-                        Log.d(TAG, "There is some date: dateInMilliseconds = " + dateInMilliseconds + ", timeInMilliseconds = " + timeInMilliseconds);
-
                         long milliseconds = 0;
 
                         if (dateInMilliseconds == 0) {
@@ -352,10 +341,8 @@ public class TaskFragment extends Fragment implements ContactFragment.ContactCli
                             calStart.set(Calendar.SECOND, 0);
                             calStart.set(Calendar.MILLISECOND, 0);
                             Date midnightYesterday = calStart.getTime();
-                            Log.d(TAG, "midnight yesterday time = " + midnightYesterday.getTime());
                             //Date date = new Date();
                             milliseconds = midnightYesterday.getTime();
-                            Log.d(TAG, "date.getTime() gives us " + milliseconds);
                             milliseconds += timeInMilliseconds;
                         } else if (timeInMilliseconds == -1) {
                             milliseconds = dateInMilliseconds + 86370000;
@@ -377,7 +364,6 @@ public class TaskFragment extends Fragment implements ContactFragment.ContactCli
                         task.setCompleted(false);
                     }
 
-                    Log.d(TAG, "The timezone id is " + tz);
                     if (taskLocation == null || taskLocation.equals("") /*&& task.getDueDate() == null */) {
                         task.setTimeZone(tz);
                     }
@@ -404,7 +390,6 @@ public class TaskFragment extends Fragment implements ContactFragment.ContactCli
 
         if (newTask != null && newTask.getTaskTitle() != null && !newTask.getTaskTitle().equals(null) && !newTask.getTaskTitle().equals("")) {
             editing = true;
-            Log.d(TAG, "updating task, number of participants = " + newTask.getParticipants().size());
             taskTitleView.setText(newTask.getTaskTitle());
             task = newTask;
             if (newTask.getTaskDetails() != null && !newTask.getTaskDetails().equals(null) && !newTask.getTaskDetails().equals("")) {
@@ -552,10 +537,7 @@ public class TaskFragment extends Fragment implements ContactFragment.ContactCli
         final String GOOGLE_MAPS_URL = "https://maps.googleapis.com/maps/api/geocode/json?address="
                 + location  + "&key=" + "AIzaSyDTlAi9krTLWAoa8vfYH5fmBF2FsBM-QXg";
 
-        Log.d(TAG, "url = " + GOOGLE_MAPS_URL);
-
         if (isNetworkAvailable() ) {
-            Log.d(TAG, "editing? " + editing);
             OkHttpClient okHttpClient = new OkHttpClient();
             okhttp3.Request request = new Request.Builder()
                     .url(GOOGLE_MAPS_URL)
@@ -602,7 +584,6 @@ public class TaskFragment extends Fragment implements ContactFragment.ContactCli
                                         task.setServerId(0);
                                         addTaskToLocalDatabase();
                                     } else {
-                                        Log.d(TAG, "editing the task");
                                         updateTaskLocally();
                                     }
 
@@ -688,7 +669,6 @@ public class TaskFragment extends Fragment implements ContactFragment.ContactCli
                             addTaskToLocalDatabase();
 
                         } else {
-                            Log.d(TAG, "updating the task");
                             updateTaskLocally();
                         }
 
@@ -711,7 +691,6 @@ public class TaskFragment extends Fragment implements ContactFragment.ContactCli
                             task.setServerId(0);
                             addTaskToLocalDatabase();
                         } else {
-                            Log.d(TAG, "updating the task");
                             updateTaskLocally();
                         }
                     }
