@@ -88,6 +88,7 @@ public class TaskFragment extends Fragment implements ContactFragment.ContactCli
 
     private ITask apiCaller;
 
+    @Bind(R.id.taskIdValue)TextView taskIdView;
     @Bind(R.id.newTaskTitleValue)EditText taskTitleView;
     @Bind(R.id.newTaskDetailsValue)EditText taskDetailView;
     @Bind(R.id.newTaskLocationValue)EditText taskLocationView;
@@ -388,8 +389,11 @@ public class TaskFragment extends Fragment implements ContactFragment.ContactCli
 
     public void updateTaskView(Task newTask) {
 
+        clearAllViews();
+
         if (newTask != null && newTask.getTaskTitle() != null && !newTask.getTaskTitle().equals(null) && !newTask.getTaskTitle().equals("")) {
             editing = true;
+            taskIdView.setText("Task ID: " + task.getId());
             taskTitleView.setText(newTask.getTaskTitle());
             task = newTask;
             if (newTask.getTaskDetails() != null && !newTask.getTaskDetails().equals(null) && !newTask.getTaskDetails().equals("")) {
@@ -446,8 +450,16 @@ public class TaskFragment extends Fragment implements ContactFragment.ContactCli
         } else {
             editing = false;
             task = new Task();
-            clearAllViews();
         }
+
+        final ScrollView scrollView = (ScrollView)taskView.findViewById(R.id.scrollView);
+        scrollView.post(new Runnable() {
+            @Override
+            public void run() {
+                scrollView.fullScroll(ScrollView.FOCUS_UP);
+            }
+        });
+        taskTitleView.requestFocus();
 
     }
 
@@ -458,6 +470,16 @@ public class TaskFragment extends Fragment implements ContactFragment.ContactCli
         taskLocationView.setText("");
         dateView.setText("");
         timeView.setText("");
+        taskIdView.setText("");
+        taskIdView.setVisibility(View.GONE);
+
+        while (participantNumber >= 0) {
+
+            LinearLayout layout = (LinearLayout) taskView.findViewById(participantNumber);
+            removeParticipant(layout, participantNumber-1);
+        }
+        participantNumber = 0;
+
     }
 
     public void addTaskToLocalDatabase() {
@@ -474,7 +496,7 @@ public class TaskFragment extends Fragment implements ContactFragment.ContactCli
         updateList();
 
     }
-
+/*
     public void updateView(Task mTask) {
         task = mTask;
 
@@ -491,7 +513,7 @@ public class TaskFragment extends Fragment implements ContactFragment.ContactCli
             taskLocationView.setText(task.getLocationName());
             clearLocationButton.setVisibility(View.VISIBLE);
         }
-        if (task.getDueDate() != 0 /*&& !task.getDueDate().equals(null) && !task.getDueDate().equals("") */) {
+        if (task.getDueDate() != 0) {
             long milliseconds = Long.valueOf(task.getDueDate());
             SimpleDateFormat dt = new SimpleDateFormat("EEE MMM dd hh:mm:ss z yyyy");
             SimpleDateFormat dateFormat = new SimpleDateFormat("MM/dd/yyyy");
@@ -526,7 +548,17 @@ public class TaskFragment extends Fragment implements ContactFragment.ContactCli
         if (task.isCompleted()) {
             markCompletedCheckbox.setChecked(true);
         }
-    }
+
+
+        final ScrollView scrollView = (ScrollView)taskView.findViewById(R.id.scrollView);
+        scrollView.post(new Runnable() {
+            @Override
+            public void run() {
+                scrollView.fullScroll(ScrollView.FOCUS_UP);
+            }
+        });
+        taskTitleView.requestFocus();
+    } */
 
     public interface OnFragmentInteractionListener {
         void onFragmentInteraction(Uri uri);
@@ -653,6 +685,7 @@ public class TaskFragment extends Fragment implements ContactFragment.ContactCli
                     task.setServerId(0);
                     addTaskToLocalDatabase();
                 }
+
                 @Override
                 public void onResponse(okhttp3.Call call, okhttp3.Response response) throws IOException {
                     try {
@@ -726,6 +759,7 @@ public class TaskFragment extends Fragment implements ContactFragment.ContactCli
         layout.setLayoutParams(new ActionBar.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
         layout.setOrientation(LinearLayout.HORIZONTAL);
         layout.setGravity(Gravity.CENTER_VERTICAL);
+        layout.setId(participantNumber);
 
         final ArrayAdapter<String> adapter = new ArrayAdapter<String>(getActivity(), android.R.layout.simple_dropdown_item_1line, participantMatches);
         final AutoCompleteTextView editText = new AutoCompleteTextView(getActivity());
@@ -737,7 +771,7 @@ public class TaskFragment extends Fragment implements ContactFragment.ContactCli
         editText.setTextSize(16);
         editText.setHint("Participant name");
         editText.setText(name);
-        editText.setId(participantNumber);
+        editText.setId(participantNumber + R.string.participant_edittext);
 
         final Button contactButton = new Button(getActivity());
         contactButton.setLayoutParams(new ActionBar.LayoutParams(70, 70));
@@ -771,21 +805,8 @@ public class TaskFragment extends Fragment implements ContactFragment.ContactCli
         button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-
-                int id = editText.getId();
-
-                layout.removeView(editText);
-                layout.removeView(button);
-                taskParticipantLayout.removeView(layout);
-
-                for (int i = id + 1; i < participantNumber; i++) {
-
-                    EditText editText1 = (EditText)taskView.findViewById(i);
-                    editText1.setId(i - 1);
-                    Button button1 = (Button)taskView.findViewById(i + R.string.remove_participant);
-                    button1.setId((i - 1) + R.string.remove_participant);
-                }
-                participantNumber--;
+                int id = layout.getId();
+                removeParticipant(layout, id);
             }
         });
 
@@ -807,6 +828,22 @@ public class TaskFragment extends Fragment implements ContactFragment.ContactCli
                 scrollView.fullScroll(ScrollView.FOCUS_DOWN);
             }
         });
+    }
+
+    public void removeParticipant(LinearLayout layout, int id) {
+
+       /* layout.removeView(editText);
+        layout.removeView(button);  */
+        taskParticipantLayout.removeView(layout);
+
+        for (int i = id + 1; i < participantNumber; i++) {
+
+            EditText editText1 = (EditText)taskView.findViewById(i);
+            editText1.setId(i - 1);
+            Button button1 = (Button)taskView.findViewById(i + R.string.remove_participant);
+            button1.setId((i - 1) + R.string.remove_participant);
+        }
+        participantNumber--;
     }
 
     @Override

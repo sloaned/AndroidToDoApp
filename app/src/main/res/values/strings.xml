@@ -23,6 +23,8 @@
 
     <string name="remove_participant">removeParticipant</string>
     <string name="show_contacts">showContacts</string>
+    <string name="participant_layout">participantLayout</string>
+    <string name="participant_edittext">participantEditText</string>
 
 
     <!-- API Keys, temporary -->
