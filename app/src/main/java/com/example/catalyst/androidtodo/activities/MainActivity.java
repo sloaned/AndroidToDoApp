@@ -1,5 +1,7 @@
 package com.example.catalyst.androidtodo.activities;
 
+import android.app.AlarmManager;
+import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -23,6 +25,7 @@ import com.example.catalyst.androidtodo.adapters.TaskAdapter;
 import com.example.catalyst.androidtodo.data.DBHelper;
 import com.example.catalyst.androidtodo.data.TaskContract;
 import com.example.catalyst.androidtodo.data.TaskDBOperations;
+import com.example.catalyst.androidtodo.listener.NotificationReceiver;
 import com.example.catalyst.androidtodo.models.Participant;
 import com.example.catalyst.androidtodo.models.Task;
 import com.example.catalyst.androidtodo.network.ApiCaller;
@@ -65,8 +68,9 @@ public class MainActivity extends AppCompatActivity {
     private ITask apiCaller;
     private Retrofit retrofit;
 
+    private NotificationReceiver receiver = new NotificationReceiver();
+
     public static final String TAG = MainActivity.class.getSimpleName();
-   // private static final String API = "http://pc30120.catalystsolves.com:8080/";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -78,9 +82,11 @@ public class MainActivity extends AppCompatActivity {
         prefs = PreferenceManager.getDefaultSharedPreferences(this);
         mEditor = prefs.edit();
         mTaskDBOperations = new TaskDBOperations(this);
-       // mEditor.putString(SharedPreferencesConstants.PREFS_TOKEN, null).apply();
+
         deleteDatabase(TaskContract.DATABASE_NAME);
         SQLiteDatabase taskDatabase = openOrCreateDatabase(TaskContract.DATABASE_NAME, MODE_PRIVATE, null);
+
+        receiver.turnOnNotifications(this);
 
         if (!doesTokenExist()) {
             Intent intent = new Intent(this, LoginActivity.class);
@@ -117,6 +123,10 @@ public class MainActivity extends AppCompatActivity {
             Intent intent = new Intent(this, LoginActivity.class);
             startActivity(intent);
             return true;
+        }
+
+        if (id == R.id.action_notify) {
+            receiver.testNotification(this);
         }
 
         return super.onOptionsItemSelected(item);
@@ -232,24 +242,10 @@ public class MainActivity extends AppCompatActivity {
         Intent intent = new Intent(this, HomeActivity.class);
         startActivity(intent);
     }
-/*
-    private OkHttpClient assignInterceptorWithToken() {
 
-        final String token = prefs.getString(SharedPreferencesConstants.PREFS_TOKEN, (String) null);
-        Log.d(TAG, "before adding interceptor, token = " + token);
-        return client.newBuilder().addInterceptor(new Interceptor() {
-            @Override
-            public okhttp3.Response intercept(Chain chain) throws IOException {
-                Request original = chain.request();
 
-                Request request = original.newBuilder()
-                        .method(original.method(), original.body())
-                        .header("X-AUTH-TOKEN", token)
-                        .build();
-                return chain.proceed(request);
-            }
-        }).build();
-    }  */
+
+
 
 
 }

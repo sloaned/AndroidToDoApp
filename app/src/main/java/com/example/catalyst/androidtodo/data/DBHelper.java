@@ -271,6 +271,80 @@ public class DBHelper extends SQLiteOpenHelper {
         return taskList;
     }
 
+    public ArrayList<Task> getTasksDueToday() {
+        ArrayList<Task> taskList = new ArrayList<Task>();
+        SQLiteDatabase db = this.getReadableDatabase();
+        Date date = new Date();
+        long ms = date.getTime();
+        Log.d(TAG, "time now = " + ms);
+        long dayEndMS = ((ms/86400000)+1) * 86400000;
+        Log.d(TAG, "time at end of day = " + dayEndMS);
+        Cursor res = db.rawQuery( "SELECT * FROM " + TaskContract.TaskEntry.TABLE_NAME + " WHERE " + TaskContract.TaskEntry.COLUMN_COMPLETED + " = " + 0 + " AND ((" + TaskContract.TaskEntry.COLUMN_DUE_DATE + " > " + ms + " AND " + TaskContract.TaskEntry.COLUMN_DUE_DATE + " < " + dayEndMS + ") OR " + TaskContract.TaskEntry.COLUMN_DUE_DATE + " = " + 0 + ") ORDER BY " + TaskContract.TaskEntry.COLUMN_DUE_DATE + " ASC", null);
+        res.moveToFirst();
+        while (res.isAfterLast() == false) {
+            Task task = new Task();
+            task.setTaskTitle(res.getString(res.getColumnIndex(TaskContract.TaskEntry.COLUMN_TASK_TITLE)));
+            task.setTaskDetails(res.getString(res.getColumnIndex(TaskContract.TaskEntry.COLUMN_TASK_DETAILS)));
+            task.setDueDate(res.getLong(res.getColumnIndex(TaskContract.TaskEntry.COLUMN_DUE_DATE)));
+            task.setLocationName(res.getString(res.getColumnIndex(TaskContract.TaskEntry.COLUMN_LOCATION_NAME)));
+            task.setTimeZone(res.getString(res.getColumnIndex(TaskContract.TaskEntry.COLUMN_TIMEZONE)));
+            task.setLatitude(res.getDouble(res.getColumnIndex(TaskContract.TaskEntry.COLUMN_LATITUDE)));
+            task.setLongitude(res.getDouble(res.getColumnIndex(TaskContract.TaskEntry.COLUMN_LONGITUDE)));
+            task.setServerId(res.getInt(res.getColumnIndex(TaskContract.TaskEntry.COLUMN_SERVER_ID)));
+            task.setId(res.getInt(res.getColumnIndex(TaskContract.TaskEntry._ID)));
+            Log.d(TAG, "task's server id = " + task.getServerId());
+            task.setCompleted(false);
+
+
+            int id = res.getInt(res.getColumnIndex(TaskContract.TaskEntry._ID));
+            List<Participant> participants = getTaskParticipants(id);
+
+            task.setParticipants(participants);
+
+            taskList.add(task);
+            res.moveToNext();
+        }
+        res.close();
+        db.close();
+        return taskList;
+    }
+
+    public ArrayList<Task> getPastDueTasks() {
+        ArrayList<Task> taskList = new ArrayList<Task>();
+        SQLiteDatabase db = this.getReadableDatabase();
+        Date date = new Date();
+        long ms = date.getTime();
+        Log.d(TAG, "getPastDueTasks(), time now = " + ms);
+        Cursor res = db.rawQuery( "SELECT * FROM " + TaskContract.TaskEntry.TABLE_NAME + " WHERE " + TaskContract.TaskEntry.COLUMN_DUE_DATE + " < " + ms + " AND " + TaskContract.TaskEntry.COLUMN_DUE_DATE + " > " + 0 + " AND " + TaskContract.TaskEntry.COLUMN_COMPLETED + " = " + 0 + " ORDER BY " + TaskContract.TaskEntry.COLUMN_DUE_DATE + " ASC", null);
+        res.moveToFirst();
+        while (res.isAfterLast() == false) {
+            Task task = new Task();
+            task.setTaskTitle(res.getString(res.getColumnIndex(TaskContract.TaskEntry.COLUMN_TASK_TITLE)));
+            task.setTaskDetails(res.getString(res.getColumnIndex(TaskContract.TaskEntry.COLUMN_TASK_DETAILS)));
+            task.setDueDate(res.getLong(res.getColumnIndex(TaskContract.TaskEntry.COLUMN_DUE_DATE)));
+            task.setLocationName(res.getString(res.getColumnIndex(TaskContract.TaskEntry.COLUMN_LOCATION_NAME)));
+            task.setTimeZone(res.getString(res.getColumnIndex(TaskContract.TaskEntry.COLUMN_TIMEZONE)));
+            task.setLatitude(res.getDouble(res.getColumnIndex(TaskContract.TaskEntry.COLUMN_LATITUDE)));
+            task.setLongitude(res.getDouble(res.getColumnIndex(TaskContract.TaskEntry.COLUMN_LONGITUDE)));
+            task.setServerId(res.getInt(res.getColumnIndex(TaskContract.TaskEntry.COLUMN_SERVER_ID)));
+            task.setId(res.getInt(res.getColumnIndex(TaskContract.TaskEntry._ID)));
+            Log.d(TAG, "task's server id = " + task.getServerId());
+            task.setCompleted(false);
+
+
+            int id = res.getInt(res.getColumnIndex(TaskContract.TaskEntry._ID));
+            List<Participant> participants = getTaskParticipants(id);
+
+            task.setParticipants(participants);
+
+            taskList.add(task);
+            res.moveToNext();
+        }
+        res.close();
+        db.close();
+        return taskList;
+    }
+
     public ArrayList<Task> getCompletedTasks() {
         Log.d(TAG, "in dbHelper, getCompletedTasks()");
         ArrayList<Task> taskList = new ArrayList<Task>();

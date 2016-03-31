@@ -40,7 +40,6 @@
                      android:layout_width="wrap_content"
                      android:layout_height="wrap_content"
                      android:id="@+id/newTaskTitleValue"
-                     android:background="@android:color/transparent"
                      android:textSize="14sp"
                      android:maxLength="50"/>
 
@@ -65,8 +64,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:id="@+id/newTaskDetailsValue"
-                    android:textSize="12sp"
-                    android:background="@android:color/transparent"/>
+                    android:textSize="12sp"/>
 
             </LinearLayout>
 
@@ -178,7 +176,6 @@
                     android:minWidth="100dp"
                     android:layout_height="wrap_content"
                     android:id="@+id/newTaskLocationValue"
-                    android:background="@android:color/transparent"
                     android:textSize="14sp"/>
 
                 <Button

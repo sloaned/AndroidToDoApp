@@ -291,6 +291,7 @@ public class TaskFragment extends Fragment implements ContactFragment.ContactCli
         cancelButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                clearAllViews();
                 getActivity().finish();
             }
         });
@@ -317,7 +318,7 @@ public class TaskFragment extends Fragment implements ContactFragment.ContactCli
 
                     if (participantNumber > 0) {
                         for (int i = 0; i < participantNumber; i++) {
-                            EditText editText = (EditText) taskView.findViewById(i);
+                            EditText editText = (EditText) taskView.findViewById(i + R.string.participant_edittext);
                             String taskParticipant = editText.getText().toString();
 
                             if (!taskParticipant.equals(null) && !taskParticipant.equals("")) {
@@ -496,69 +497,6 @@ public class TaskFragment extends Fragment implements ContactFragment.ContactCli
         updateList();
 
     }
-/*
-    public void updateView(Task mTask) {
-        task = mTask;
-
-        clearDateButton.setVisibility(View.INVISIBLE);
-        clearTimeButton.setVisibility(View.INVISIBLE);
-        clearLocationButton.setVisibility(View.INVISIBLE);
-
-        editing = true;
-        taskTitleView.setText(task.getTaskTitle());
-        if (task.getTaskDetails() != null && !task.getTaskDetails().equals(null) && !task.getTaskDetails().equals("")) {
-            taskDetailView.setText(task.getTaskDetails());
-        }
-        if (task.getLocationName() != null && !task.getLocationName().equals(null) && !task.getLocationName().equals("")) {
-            taskLocationView.setText(task.getLocationName());
-            clearLocationButton.setVisibility(View.VISIBLE);
-        }
-        if (task.getDueDate() != 0) {
-            long milliseconds = Long.valueOf(task.getDueDate());
-            SimpleDateFormat dt = new SimpleDateFormat("EEE MMM dd hh:mm:ss z yyyy");
-            SimpleDateFormat dateFormat = new SimpleDateFormat("MM/dd/yyyy");
-            SimpleDateFormat timeFormat = new SimpleDateFormat("h:mm aaa");
-
-            Date date = new Date(milliseconds);
-
-            String dateString = date.toString();
-            try {
-                date = dt.parse(dateString);
-            } catch (ParseException e) {
-                Log.e(TAG, "date parsing error: " + e.getMessage());
-            }
-            timeInMilliseconds = milliseconds % 86400000;
-            dateInMilliseconds = milliseconds - timeInMilliseconds;
-
-            String theDate = dateFormat.format(date);
-            String theTime = timeFormat.format(date);
-            dateView.setText(theDate);
-            clearDateButton.setVisibility(View.VISIBLE);
-            timeView.setText(theTime);
-            clearTimeButton.setVisibility(View.VISIBLE);
-        }
-        if (task.getParticipants().size() > 0) {
-
-            for (int i = 0; i < task.getParticipants().size(); i++) {
-                String name = task.getParticipants().get(i).getParticipantName();
-                addParticipantView(name);
-            }
-        }
-
-        if (task.isCompleted()) {
-            markCompletedCheckbox.setChecked(true);
-        }
-
-
-        final ScrollView scrollView = (ScrollView)taskView.findViewById(R.id.scrollView);
-        scrollView.post(new Runnable() {
-            @Override
-            public void run() {
-                scrollView.fullScroll(ScrollView.FOCUS_UP);
-            }
-        });
-        taskTitleView.requestFocus();
-    } */
 
     public interface OnFragmentInteractionListener {
         void onFragmentInteraction(Uri uri);
@@ -657,8 +595,6 @@ public class TaskFragment extends Fragment implements ContactFragment.ContactCli
         }
 
     }
-
-
 
     public void getLocationTimezone(String lat, String lng) {
         String coordinates = lat + "," + lng;

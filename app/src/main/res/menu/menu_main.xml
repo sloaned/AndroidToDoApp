@@ -8,4 +8,10 @@
         android:title="Log out"
         app:showAsAction="never" />
 
+    <item
+        android:id="@+id/action_notify"
+        android:orderInCategory="100"
+        android:title="Notification"
+        app:showAsAction="never"/>
+
 </menu>

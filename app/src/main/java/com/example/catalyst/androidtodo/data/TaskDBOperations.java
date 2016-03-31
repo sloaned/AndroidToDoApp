@@ -1,6 +1,7 @@
 package com.example.catalyst.androidtodo.data;
 
 import android.content.Context;
+import android.util.Log;
 
 import com.example.catalyst.androidtodo.activities.HomeActivity;
 import com.example.catalyst.androidtodo.models.Task;
@@ -43,6 +44,20 @@ public class TaskDBOperations {
     public ArrayList<Task> getLocalUnsynchedTasks() {
         DBHelper dbHelper = new DBHelper(context);
         ArrayList<Task> tasks = dbHelper.getUnsynchedTasks();
+        dbHelper.close();
+        return tasks;
+    }
+
+    public ArrayList<Task> getTasksDueToday() {
+        DBHelper dbHelper = new DBHelper(context);
+        ArrayList<Task> tasks = dbHelper.getTasksDueToday();
+        dbHelper.close();
+        return tasks;
+    }
+
+    public ArrayList<Task> getPastDueTasks () {
+        DBHelper dbHelper = new DBHelper(context);
+        ArrayList<Task> tasks = dbHelper.getPastDueTasks();
         dbHelper.close();
         return tasks;
     }
