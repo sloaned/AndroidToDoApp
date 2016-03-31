@@ -10,6 +10,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.support.v4.app.NotificationCompat;
+import android.util.Log;
 
 import com.example.catalyst.androidtodo.R;
 import com.example.catalyst.androidtodo.activities.MainActivity;
@@ -19,6 +20,7 @@ import com.example.catalyst.androidtodo.models.Task;
 
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Date;
 
 /**
  * Created by dsloane on 3/31/2016.
@@ -28,6 +30,8 @@ public class NotificationReceiver extends BroadcastReceiver {
     private TaskDBOperations mTaskDBOperations;
     private AlarmManager alarmMgr;
     private PendingIntent alarmIntent;
+
+    private final String TAG = getClass().getSimpleName();
 
     @Override
     public void onReceive(Context context, Intent intent) {
@@ -43,6 +47,9 @@ public class NotificationReceiver extends BroadcastReceiver {
         ArrayList<Task> allTasks = dbHelper.getAllTasks();
         dbHelper.close();
 
+        Date date = new Date();
+        int ms = (int) ((date.getTime())/1000);
+
         boolean multiple = false;
 
         if (dueTasks.size() > 1) {
@@ -55,7 +62,7 @@ public class NotificationReceiver extends BroadcastReceiver {
             dueTodayMessage = "No tasks due today";
         }
 
-        notify(1, context, dueTodayMessage, multiple);
+        notify(ms+1, context, dueTodayMessage, multiple);
 
         if (pastDueTasks.size() > 1) {
             multiple = true;
@@ -67,11 +74,11 @@ public class NotificationReceiver extends BroadcastReceiver {
             pastDueMessage = "No tasks past due";
         }
 
-        notify(2, context, pastDueMessage, multiple);
+        notify(ms+2, context, pastDueMessage, multiple);
 
         String allTasksMessage = "Number of tasks: " + allTasks.size();
 
-        notify(3, context, allTasksMessage, multiple);
+        notify(ms+3, context, allTasksMessage, multiple);
 
     }
 
@@ -91,12 +98,20 @@ public class NotificationReceiver extends BroadcastReceiver {
     }
 
     public void testNotification(Context context) {
+        Log.d(TAG, "in testNotification()");
         String dueTodayMessage = "";
         String pastDueMessage = "";
         mTaskDBOperations = new TaskDBOperations(context);
 
-        ArrayList<Task> dueTasks = mTaskDBOperations.getTasksDueToday();
-        ArrayList<Task> pastDueTasks = mTaskDBOperations.getPastDueTasks();
+
+        DBHelper dbHelper = new DBHelper(context);
+        ArrayList<Task> dueTasks = dbHelper.getTasksDueToday();
+        ArrayList<Task> pastDueTasks = dbHelper.getPastDueTasks();
+        ArrayList<Task> allTasks = dbHelper.getAllTasks();
+        dbHelper.close();
+
+        Date date = new Date();
+        int ms = (int) ((date.getTime())/1000);
 
         boolean multiple = false;
 
@@ -106,9 +121,11 @@ public class NotificationReceiver extends BroadcastReceiver {
         } else if (dueTasks.size() == 1) {
             multiple = false;
             dueTodayMessage = "Due today: " + dueTasks.get(0).getTaskTitle();
+        } else {
+            dueTodayMessage = "No tasks due today";
         }
 
-        notify(1, context, dueTodayMessage, multiple);
+        notify(ms+1, context, dueTodayMessage, multiple);
 
         if (pastDueTasks.size() > 1) {
             multiple = true;
@@ -116,9 +133,15 @@ public class NotificationReceiver extends BroadcastReceiver {
         } else if (pastDueTasks.size() == 1) {
             multiple = false;
             pastDueMessage = "Past Due: " + pastDueTasks.get(0).getTaskTitle();
+        } else {
+            pastDueMessage = "No tasks past due";
         }
 
-        notify(2, context, pastDueMessage, multiple);
+        notify(ms+2, context, pastDueMessage, multiple);
+
+        String allTasksMessage = "Number of tasks: " + allTasks.size();
+
+        notify(ms+3, context, allTasksMessage, multiple);
     }
 
     public void turnOnNotifications (Context context) {

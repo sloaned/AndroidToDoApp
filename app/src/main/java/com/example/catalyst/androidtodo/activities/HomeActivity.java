@@ -13,6 +13,7 @@ import android.view.MenuItem;
 import com.example.catalyst.androidtodo.R;
 import com.example.catalyst.androidtodo.fragments.HomeFragment;
 import com.example.catalyst.androidtodo.fragments.TaskFragment;
+import com.example.catalyst.androidtodo.listener.NotificationReceiver;
 import com.example.catalyst.androidtodo.models.Task;
 import com.example.catalyst.androidtodo.util.SharedPreferencesConstants;
 
@@ -101,6 +102,11 @@ public class HomeActivity extends AppCompatActivity implements HomeFragment.OnTa
             Intent intent = new Intent(this, LoginActivity.class);
             startActivity(intent);
             return true;
+        }
+
+        if (id == R.id.action_notify) {
+            NotificationReceiver receiver = new NotificationReceiver();
+            receiver.testNotification(this);
         }
 
         return super.onOptionsItemSelected(item);

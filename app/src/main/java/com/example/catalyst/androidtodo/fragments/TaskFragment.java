@@ -354,7 +354,6 @@ public class TaskFragment extends Fragment implements ContactFragment.ContactCli
 
                         task.setDueDate(milliseconds);
                     } else {
-                        Log.d(TAG, "dateInMilliseconds = " + dateInMilliseconds + ", timeInMilliseconds = " + timeInMilliseconds);
                         task.setDueDate(0);
                     }
 
