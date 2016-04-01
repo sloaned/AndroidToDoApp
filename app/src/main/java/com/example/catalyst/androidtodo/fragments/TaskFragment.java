@@ -487,7 +487,12 @@ public class TaskFragment extends Fragment implements ContactFragment.ContactCli
         DBHelper dbHelper = new DBHelper(getActivity());
         dbHelper.addTask(task);
         dbHelper.close();
-        Toast.makeText(getActivity(), "Task created!", Toast.LENGTH_LONG).show();
+        getActivity().runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                Toast.makeText(getActivity(), "Task created!", Toast.LENGTH_LONG).show();
+            }
+        });
         updateList();
     }
 
@@ -495,7 +500,13 @@ public class TaskFragment extends Fragment implements ContactFragment.ContactCli
         DBHelper dbHelper = new DBHelper(getActivity());
         dbHelper.updateTask(task);
         dbHelper.close();
-        Toast.makeText(getActivity(), "Task updated!", Toast.LENGTH_LONG).show();
+        getActivity().runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                Toast.makeText(getActivity(), "Task updated!", Toast.LENGTH_LONG).show();
+            }
+        });
+
         updateList();
 
     }
@@ -590,7 +601,13 @@ public class TaskFragment extends Fragment implements ContactFragment.ContactCli
     }
 
     private void updateList() {
-        clearAllViews();
+
+        getActivity().runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                clearAllViews();
+            }
+        });
         if (getActivity() instanceof DetailActivity) {
             getActivity().finish();
         } else {
