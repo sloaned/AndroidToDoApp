@@ -30,6 +30,7 @@ import android.widget.LinearLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.TimePicker;
+import android.widget.Toast;
 
 import com.example.catalyst.androidtodo.R;
 import com.example.catalyst.androidtodo.activities.DetailActivity;
@@ -486,6 +487,7 @@ public class TaskFragment extends Fragment implements ContactFragment.ContactCli
         DBHelper dbHelper = new DBHelper(getActivity());
         dbHelper.addTask(task);
         dbHelper.close();
+        Toast.makeText(getActivity(), "Task created!", Toast.LENGTH_LONG).show();
         updateList();
     }
 
@@ -493,6 +495,7 @@ public class TaskFragment extends Fragment implements ContactFragment.ContactCli
         DBHelper dbHelper = new DBHelper(getActivity());
         dbHelper.updateTask(task);
         dbHelper.close();
+        Toast.makeText(getActivity(), "Task updated!", Toast.LENGTH_LONG).show();
         updateList();
 
     }
@@ -587,6 +590,7 @@ public class TaskFragment extends Fragment implements ContactFragment.ContactCli
     }
 
     private void updateList() {
+        clearAllViews();
         if (getActivity() instanceof DetailActivity) {
             getActivity().finish();
         } else {

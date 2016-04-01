@@ -44,7 +44,6 @@ public class NotificationReceiver extends BroadcastReceiver {
         DBHelper dbHelper = new DBHelper(context);
         ArrayList<Task> dueTasks = dbHelper.getTasksDueToday();
         ArrayList<Task> pastDueTasks = dbHelper.getPastDueTasks();
-        ArrayList<Task> allTasks = dbHelper.getAllTasks();
         dbHelper.close();
 
         Date date = new Date();
@@ -75,10 +74,6 @@ public class NotificationReceiver extends BroadcastReceiver {
         }
 
         notify(ms+2, context, pastDueMessage, multiple);
-
-        String allTasksMessage = "Number of tasks: " + allTasks.size();
-
-        notify(ms+3, context, allTasksMessage, multiple);
 
     }
 
@@ -107,7 +102,6 @@ public class NotificationReceiver extends BroadcastReceiver {
         DBHelper dbHelper = new DBHelper(context);
         ArrayList<Task> dueTasks = dbHelper.getTasksDueToday();
         ArrayList<Task> pastDueTasks = dbHelper.getPastDueTasks();
-        ArrayList<Task> allTasks = dbHelper.getAllTasks();
         dbHelper.close();
 
         Date date = new Date();
@@ -139,9 +133,6 @@ public class NotificationReceiver extends BroadcastReceiver {
 
         notify(ms+2, context, pastDueMessage, multiple);
 
-        String allTasksMessage = "Number of tasks: " + allTasks.size();
-
-        notify(ms+3, context, allTasksMessage, multiple);
     }
 
     public void turnOnNotifications (Context context) {
